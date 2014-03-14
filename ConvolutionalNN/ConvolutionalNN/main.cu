@@ -16,11 +16,15 @@
 int main()
 {
 	cv::Mat rgb = cv::imread("data/test.png", CV_LOAD_IMAGE_COLOR);
+	if(!rgb.data){
+		std::cout << "empty?" << std::endl;
+		return -1;
+	}
+	
 	cv::namedWindow("some name", CV_WINDOW_AUTOSIZE);
 	cv::imshow("some name", rgb);
 
-	cvWaitKey(1000);
-	system("pause");
+	cv::waitKey(0);
 
     return 0;
 }
