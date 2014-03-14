@@ -7,7 +7,14 @@
 #include <opencv2/highgui/highgui.hpp>
 
 
-namespace utils {
+namespace cnn {
+	namespace utils {
+
+
+template<typename T>
+T align(T pValue, T pAlign){
+	return static_cast<T>((std::ceil(static_cast<double>(pValue) / pAlign)) * pAlign);
+}
 
 
 template<typename T>
@@ -34,4 +41,5 @@ size_t createFoldsInPlace(std::vector<T>& pData, size_t pFoldsCount){
 }
 
 
+	}
 }
