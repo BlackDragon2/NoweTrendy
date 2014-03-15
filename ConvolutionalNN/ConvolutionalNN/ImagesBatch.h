@@ -36,6 +36,9 @@ public:
 	uchar*			getImage(size_t pIndex);
 	uchar const* 	getImage(size_t pIndex) const;
 
+	size_t getBatchSize()	const;
+	size_t getImagesCount() const;
+
 
 private:
 	ImagesBatch();
@@ -47,6 +50,7 @@ private:
 	size_t				mHeight;
 	size_t				mChannels;
 	size_t				mImageSize;
+	size_t				mImagesCount;
 };
 
 

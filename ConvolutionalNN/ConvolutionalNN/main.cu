@@ -16,15 +16,27 @@
 int main()
 {
 	std::vector<std::string> files;
-	files.push_back("data/test.png");
-	files.push_back("data/test2.png");
+	files.push_back("data/test2.jpg");
+	files.push_back("data/test3.jpg");
 
 	cnn::ImagesBatch b = cnn::ImagesBatch::fromFiles(files);
 	{
 		cv::namedWindow("some name", CV_WINDOW_AUTOSIZE);
 		cv::namedWindow("some name2", CV_WINDOW_AUTOSIZE);
+		cv::namedWindow("some name23", CV_WINDOW_AUTOSIZE);
 		cv::imshow("some name", b.getImageAsMat(0));
 		cv::imshow("some name2", b.getImageAsMat(1));
+
+		// <<<216, 500>>>
+		// 216 blocks per 500 threads
+		uchar* imgsOnDev;
+		cudaMalloc<uchar>(&imgsOnDev, b.getBatchSize());
+		cudaMemcpy(imgsOnDev, b.getImagesData(), b.getBatchSize(), cudaMemcpyHostToDevice);
+		centerImages<<<216, 500>>>(imgsOnDev, b.getImageSize(), b.getImagesCount());
+		cudaMemcpy(b.getImagesData(), imgsOnDev, b.getBatchSize(), cudaMemcpyDeviceToHost);
+		cudaFree(imgsOnDev);
+
+		cv::imshow("some name23", b.getImageAsMat(1));
 	}
 	cv::waitKey(0);
 

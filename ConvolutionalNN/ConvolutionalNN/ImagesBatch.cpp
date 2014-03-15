@@ -32,6 +32,8 @@ ImagesBatch ImagesBatch::fromFiles(
 
 		batch.mImages.resize(batch.mImageSize * pFiles.size());
 		std::memcpy(batch.mImages.data(), mat.data, matImageSize);
+
+		batch.mImagesCount = pFiles.size();
 	}
 
 	// copy images
@@ -94,6 +96,16 @@ uchar* ImagesBatch::getImage(size_t pIndex){
 
 uchar const* ImagesBatch::getImage(size_t pIndex) const {
 	return mImages.data() + pIndex * mImageSize;
+}
+
+
+size_t ImagesBatch::getBatchSize() const {
+	return mImages.size();
+}
+
+
+size_t ImagesBatch::getImagesCount() const {
+	return mImagesCount;
 }
 
 

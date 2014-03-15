@@ -10,3 +10,53 @@ __global__ void addKernel(int *c, const int *a, const int *b)
     int i = threadIdx.x;
     c[i] = a[i] + b[i];
 }
+
+
+__global__ 
+void meanImageFrom(
+	uchar const*	pImages, 
+	size_t			pImageSize, 
+	size_t			pImageCount, 
+	uchar*			pOutput)
+{
+	size_t			sum = 0UL;
+	unsigned int	idx = (blockIdx.x * blockDim.x) + threadIdx.x;
+
+	for(size_t i=0UL; i<pImageCount; ++i)
+		sum += *(pImages + pImageSize * i + idx);
+
+	pOutput[idx] = static_cast<uchar>(sum / pImageCount);
+}
+
+
+__global__ 
+void centerImagesWith(
+	uchar*			pImages, 
+	size_t			pImageSize, 
+	size_t			pImageCount, 
+	uchar const*	pMeanValues)
+{
+	unsigned int	idx = (blockIdx.x * blockDim.x) + threadIdx.x;
+
+	for(size_t i=0UL; i<pImageCount; ++i)
+		*(pImages + pImageSize * i + idx) -= pMeanValues[idx];
+}
+
+
+__global__ 
+void centerImages(
+	uchar*			pImages, 
+	size_t			pImageSize, 
+	size_t			pImageCount)
+{
+	size_t			sum = 0UL;
+	unsigned int	idx = (blockIdx.x * blockDim.x) + threadIdx.x;
+
+	for(size_t i=0UL; i<pImageCount; ++i)
+		sum += *(pImages + pImageSize * i + idx);
+
+	uchar mean = static_cast<uchar>(sum / pImageCount);
+
+	for(size_t i=0UL; i<pImageCount; ++i)
+		*(pImages + pImageSize * i + idx) -= mean;
+}
