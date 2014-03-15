@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
+#include <sstream>
+#include <Windows.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -16,25 +18,44 @@
 int main()
 {
 	std::vector<std::string> files;
-	files.push_back("data/test2.jpg");
-	files.push_back("data/test3.jpg");
+	for(size_t i=1UL; i<=20; ++i){
+		std::stringstream path;
+		path << "data/phughe/phughe." << i << ".jpg";
+		files.push_back(path.str());
+	}
+
+	__int64 freq, s1, s2, e1, e2;
+	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
+	double spc = 1.0 / freq;
 
 	cnn::ImagesBatch b = cnn::ImagesBatch::fromFiles(files);
 	{
-		cv::namedWindow("some name", CV_WINDOW_AUTOSIZE);
-		cv::namedWindow("some name2", CV_WINDOW_AUTOSIZE);
 		cv::namedWindow("some name23", CV_WINDOW_AUTOSIZE);
-		cv::imshow("some name", b.getImageAsMat(0));
-		cv::imshow("some name2", b.getImageAsMat(1));
 
 		// <<<216, 500>>>
 		// 216 blocks per 500 threads
+		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s1));
+
 		uchar* imgsOnDev;
 		cudaMalloc<uchar>(&imgsOnDev, b.getBatchSize());
 		cudaMemcpy(imgsOnDev, b.getImagesData(), b.getBatchSize(), cudaMemcpyHostToDevice);
+		
+		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s2));
+		
 		centerImages<<<216, 500>>>(imgsOnDev, b.getImageSize(), b.getImagesCount());
+		cudaDeviceSynchronize();
+		
+		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e1));
+		
 		cudaMemcpy(b.getImagesData(), imgsOnDev, b.getBatchSize(), cudaMemcpyDeviceToHost);
 		cudaFree(imgsOnDev);
+		
+		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e2));
+		
+		std::cout << "send: " << double(s2 - s1) * spc << std::endl;
+		std::cout << "comp: " << double(e1 - s2) * spc << std::endl;
+		std::cout << "recv: " << double(e2 - e1) * spc << std::endl;
+		std::cout << "all:  " << double(e2 - s1) * spc << std::endl;
 
 		cv::imshow("some name23", b.getImageAsMat(1));
 	}

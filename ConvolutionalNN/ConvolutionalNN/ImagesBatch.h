@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include <opencv2/highgui/highgui.hpp>
 
@@ -45,12 +46,13 @@ private:
 
 
 private:
-	std::vector<uchar>	mImages;
-	size_t				mWidth;
-	size_t				mHeight;
-	size_t				mChannels;
-	size_t				mImageSize;
-	size_t				mImagesCount;
+	std::shared_ptr<std::vector<uchar>>	mImagesData;
+	size_t								mImagesCount;
+
+	size_t mImageWidth;
+	size_t mImageHeight;
+	size_t mImageChannels;
+	size_t mImageSize;
 };
 
 

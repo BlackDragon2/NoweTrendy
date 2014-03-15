@@ -5,12 +5,6 @@
 #include "device_launch_parameters.h"
 
 
-__global__ void addKernel(int *c, const int *a, const int *b)
-{
-    int i = threadIdx.x;
-    c[i] = a[i] + b[i];
-}
-
 
 __global__ 
 void meanImageFrom(
@@ -36,18 +30,18 @@ void centerImagesWith(
 	size_t			pImageCount, 
 	uchar const*	pMeanValues)
 {
-	unsigned int	idx = (blockIdx.x * blockDim.x) + threadIdx.x;
+	unsigned int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
 
 	for(size_t i=0UL; i<pImageCount; ++i)
-		*(pImages + pImageSize * i + idx) -= pMeanValues[idx];
+		*(pImages + pImageSize * i + idx) -= MIN(pMeanValues[idx], *(pImages + pImageSize * i + idx));
 }
 
 
 __global__ 
 void centerImages(
-	uchar*			pImages, 
-	size_t			pImageSize, 
-	size_t			pImageCount)
+	uchar* pImages, 
+	size_t pImageSize, 
+	size_t pImageCount)
 {
 	size_t			sum = 0UL;
 	unsigned int	idx = (blockIdx.x * blockDim.x) + threadIdx.x;
@@ -58,5 +52,5 @@ void centerImages(
 	uchar mean = static_cast<uchar>(sum / pImageCount);
 
 	for(size_t i=0UL; i<pImageCount; ++i)
-		*(pImages + pImageSize * i + idx) -= mean;
+		*(pImages + pImageSize * i + idx) -= MIN(mean, *(pImages + pImageSize * i + idx));
 }

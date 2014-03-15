@@ -20,18 +20,18 @@ ImagesBatch ImagesBatch::fromFiles(
 	// setup metadata
 	size_t matImageSize;
 	{
-		cv::Mat mat			= cv::imread(pFiles[0], pCvReadFlag);
+		cv::Mat mat	= cv::imread(pFiles[0], pCvReadFlag);
 		assert(mat.data);
 
-		batch.mWidth		= static_cast<size_t>(mat.size().width);
-		batch.mHeight		= static_cast<size_t>(mat.size().height);
-		batch.mChannels		= static_cast<size_t>(mat.channels());
+		batch.mImageWidth		= static_cast<size_t>(mat.size().width);
+		batch.mImageHeight		= static_cast<size_t>(mat.size().height);
+		batch.mImageChannels	= static_cast<size_t>(mat.channels());
 
 		matImageSize		= static_cast<size_t>(mat.size().area() * mat.channels() * sizeof(uchar));
 		batch.mImageSize	= utils::align<size_t>(matImageSize, pAlign);
 
-		batch.mImages.resize(batch.mImageSize * pFiles.size());
-		std::memcpy(batch.mImages.data(), mat.data, matImageSize);
+		batch.mImagesData.reset(new std::vector<uchar>(batch.mImageSize * pFiles.size()));
+		std::memcpy(batch.mImagesData->data(), mat.data, matImageSize);
 
 		batch.mImagesCount = pFiles.size();
 	}
@@ -40,9 +40,9 @@ ImagesBatch ImagesBatch::fromFiles(
 	for(size_t i=1UL; i<pFiles.size(); ++i){
 		cv::Mat mat	= cv::imread(pFiles[i], pCvReadFlag);
 		assert(mat.data && 
-			mat.size().width == batch.mWidth && 
-			mat.size().height == batch.mHeight);
-		std::memcpy(batch.mImages.data() + i * batch.mImageSize, mat.data, matImageSize);
+			mat.size().width == batch.mImageWidth && 
+			mat.size().height == batch.mImageHeight);
+		std::memcpy(batch.mImagesData->data() + i * batch.mImageSize, mat.data, matImageSize);
 	}
 
 	return batch;
@@ -55,22 +55,22 @@ ImagesBatch::~ImagesBatch(){
 
 
 cv::Mat ImagesBatch::getImageAsMat(size_t pIndex){
-	return cv::Mat(mHeight, mWidth, CV_8UC(mChannels), getImage(pIndex));
+	return cv::Mat(mImageHeight, mImageWidth, CV_8UC(mImageChannels), getImage(pIndex));
 }
 
 
 size_t ImagesBatch::getWidth() const {
-	return mWidth;
+	return mImageWidth;
 }
 
 
 size_t ImagesBatch::getHeight() const {
-	return mHeight;
+	return mImageHeight;
 }
 
 
 size_t ImagesBatch::getChannels() const {
-	return mChannels;
+	return mImageChannels;
 }
 
 
@@ -80,27 +80,27 @@ size_t ImagesBatch::getImageSize() const {
 
 
 uchar* ImagesBatch::getImagesData(){
-	return mImages.data();
+	return mImagesData->data();
 }
 
 
 uchar const* ImagesBatch::getImagesData() const {
-	return mImages.data();
+	return mImagesData->data();
 }
 
 
 uchar* ImagesBatch::getImage(size_t pIndex){
-	return mImages.data() + pIndex * mImageSize;
+	return mImagesData->data() + pIndex * mImageSize;
 }
 
 
 uchar const* ImagesBatch::getImage(size_t pIndex) const {
-	return mImages.data() + pIndex * mImageSize;
+	return mImagesData->data() + pIndex * mImageSize;
 }
 
 
 size_t ImagesBatch::getBatchSize() const {
-	return mImages.size();
+	return mImagesData->size();
 }
 
 
