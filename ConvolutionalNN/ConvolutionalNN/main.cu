@@ -24,7 +24,7 @@ int main()
 		files.push_back(path.str());
 	}
 
-	__int64 freq, s1, s2, e1, e2;
+	__int64 freq, s1, s12, s2, e1, e2;
 	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
 	double spc = 1.0 / freq;
 
@@ -38,11 +38,14 @@ int main()
 
 		uchar* imgsOnDev;
 		cudaMalloc<uchar>(&imgsOnDev, b.getBatchSize());
+
+		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s12));
+		
 		cudaMemcpy(imgsOnDev, b.getImagesData(), b.getBatchSize(), cudaMemcpyHostToDevice);
 		
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s2));
 		
-		centerImages<<<216, 500>>>(imgsOnDev, b.getImageSize(), b.getImagesCount());
+		centerImages<<<216, 500>>>(imgsOnDev, b.getImageByteSize(), b.getImagesCount());
 		cudaDeviceSynchronize();
 		
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e1));
@@ -52,10 +55,11 @@ int main()
 		
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e2));
 		
-		std::cout << "send: " << double(s2 - s1) * spc << std::endl;
-		std::cout << "comp: " << double(e1 - s2) * spc << std::endl;
-		std::cout << "recv: " << double(e2 - e1) * spc << std::endl;
-		std::cout << "all:  " << double(e2 - s1) * spc << std::endl;
+		std::cout << "allocation:     " << double(s12 - s1) * spc << std::endl;
+		std::cout << "send:           " << double(s2 - s12) * spc << std::endl;
+		std::cout << "comp:           " << double(e1 - s2) * spc << std::endl;
+		std::cout << "recv & dealloc: " << double(e2 - e1) * spc << std::endl;
+		std::cout << "all:            " << double(e2 - s1) * spc << std::endl;
 
 		cv::imshow("some name23", b.getImageAsMat(1));
 	}

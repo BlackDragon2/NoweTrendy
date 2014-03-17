@@ -18,14 +18,14 @@
     <ClInclude Include="Utils\Utils.h">
       <Filter>Headers\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="GPU\ImgProc.h">
-      <Filter>Headers\GPU</Filter>
-    </ClInclude>
     <ClInclude Include="ImagesBatch.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="Kernels.h">
       <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\Normalizer.h">
+      <Filter>Headers\GPU</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -20,16 +20,27 @@ public:
 
 
 public:
+	ImagesBatch(
+		size_t	pImageWidth, 
+		size_t	pImageHeight, 
+		size_t	pImageChannels, 
+		int		pAlignBytes, 
+		size_t	pCvReadFlags);
 	virtual ~ImagesBatch();
 
 
 	cv::Mat getImageAsMat(size_t pIndex);
+	
+	void allocateSpaceForImages(size_t pCount);
+
+	void addImage(cv::Mat const& pMat);
+	void addImageFromFile(std::string const& pPath);
 
 
-	size_t getWidth()		const;
-	size_t getHeight()		const;
-	size_t getChannels()	const;
-	size_t getImageSize()	const;
+	size_t getWidth()			const;
+	size_t getHeight()			const;
+	size_t getChannels()		const;
+	size_t getImageByteSize()	const;
 
 	uchar*			getImagesData();
 	uchar const*	getImagesData() const;
@@ -42,7 +53,7 @@ public:
 
 
 private:
-	ImagesBatch();
+	void validateImage(cv::Mat const& pMat) const;
 
 
 private:
@@ -52,7 +63,10 @@ private:
 	size_t mImageWidth;
 	size_t mImageHeight;
 	size_t mImageChannels;
-	size_t mImageSize;
+	size_t mImageByteSize;
+
+	int		mAlignBytes;
+	size_t	mCvReadFlags;
 };
 
 

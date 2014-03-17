@@ -17,6 +17,11 @@ T align(T pValue, T pAlign){
 }
 
 
+size_t getCvMatBytesCount(cv::Mat const& pMat){
+	return static_cast<size_t>(pMat.size().area() * pMat.channels() * sizeof(uchar));
+}
+
+
 template<typename T>
 void createFolds(
 	std::vector<T> const&			pInput, 
