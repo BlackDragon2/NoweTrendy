@@ -12,7 +12,6 @@ public:
 	enum FitTactic {
 		DEFAULT,
 		CUT,
-		EXTEND,
 		EXTEND_WITH_COPIES
 	};
 
@@ -22,6 +21,11 @@ public:
 		size_t		pElementsCount, 
 		size_t		pFoldsCount, 
 		FitTactic	pFitTactic = FitTactic::DEFAULT);
+
+	static std::shared_ptr<std::vector<size_t>> prepareFoldVectorWithCopies(
+		size_t		pElementsCount, 
+		size_t		pFoldsCount, 
+		FitTactic	pFitTactic);
 
 	
 private:
