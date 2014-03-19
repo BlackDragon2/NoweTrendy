@@ -2,11 +2,15 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
+#define WIN32_LEAN_AND_MEAN
+#define VC_EXTRALEAN
+#include <Windows.h>
+
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <Windows.h>
+#include <time.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -20,6 +24,8 @@
 
 int main()
 {
+	srand((uint)time(0));
+
 	std::shared_ptr<std::vector<size_t>> folds = cnn::utils::FoldsFactory::prepareFoldVector(117, 7, cnn::utils::FoldsFactory::FitTactic::DEFAULT);
 	std::shared_ptr<std::vector<size_t>> folds2 = cnn::utils::FoldsFactory::prepareFoldVector(117, 7, cnn::utils::FoldsFactory::FitTactic::CUT);
 	std::shared_ptr<std::vector<size_t>> folds3 = cnn::utils::FoldsFactory::prepareFoldVector(117, 7, cnn::utils::FoldsFactory::FitTactic::EXTEND_WITH_COPIES);
@@ -68,7 +74,7 @@ int main()
 		std::cout << "recv & dealloc: " << double(e2 - e1) * spc << std::endl;
 		std::cout << "all:            " << double(e2 - s1) * spc << std::endl;
 
-		cv::imshow("some name23", b->getImageAsMat(17));
+		cv::imshow("some name23", b->getImageAsMat(19));
 	}
 	cv::waitKey(0);
 

@@ -46,7 +46,8 @@ public:
 	cv::Mat getImageAsMat(size_t pIndex);
 	
 	void allocateSpaceForImages(size_t pCount);
-
+	
+	void addImage(uchar const* pData);
 	void addImage(cv::Mat const& pMat);
 	void addImageFromFile(std::string const& pPath);
 
@@ -155,13 +156,19 @@ void ImagesBatch<T>::allocateSpaceForImages(size_t pCount){
 
 
 template <typename T>
-void ImagesBatch<T>::addImage(cv::Mat const& pMat){
-	validateImage(pMat);
+void ImagesBatch<T>::addImage(uchar const* pData){
 	size_t imgUnitSize = getAlignedImageUnitSize();
 	if(mImagesData->size() < (mImagesCount + 1) * imgUnitSize)
 		allocateSpaceForImages(1UL);
-	std::memcpy(mImagesData->data() + mImagesCount * imgUnitSize, pMat.data, utils::getCvMatBytesCount(pMat));
+	std::memcpy(mImagesData->data() + mImagesCount * imgUnitSize, pData, getImageByteSize());
 	++mImagesCount;
+}
+
+
+template <typename T>
+void ImagesBatch<T>::addImage(cv::Mat const& pMat){
+	validateImage(pMat);
+	addImage(pMat.data);
 }
 
 
