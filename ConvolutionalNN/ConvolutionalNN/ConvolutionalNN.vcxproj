@@ -163,13 +163,11 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile Include="main.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GPU\Normalizer.h" />
+    <ClInclude Include="GPU\GpuBuffer.cuh" />
+    <ClInclude Include="GPU\Normalizations.cuh" />
     <ClInclude Include="ImagesBatch.h" />
-    <ClInclude Include="Kernels.h" />
+    <ClInclude Include="Types.h" />
     <ClInclude Include="Utils\Utils.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="ImagesBatch.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

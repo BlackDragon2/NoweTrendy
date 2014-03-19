@@ -1,5 +1,7 @@
 
-#pragma once
+#ifndef CNN_UTILS_H_
+#define CNN_UTILS_H_
+
 
 #include <vector>
 #include <algorithm>
@@ -22,6 +24,7 @@ size_t getCvMatBytesCount(cv::Mat const& pMat){
 }
 
 
+/*
 template<typename T>
 void createFolds(
 	std::vector<T> const&			pInput, 
@@ -44,7 +47,11 @@ size_t createFoldsInPlace(std::vector<T>& pData, size_t pFoldsCount){
 	std::random_shuffle(pData.begin(), pData.end());
 	return std::ceil(static_cast<double>(pData.size()) / pFoldsCount);
 }
+*/
 
 
 	}
 }
+
+
+#endif	/* CNN_UTILS_H_ */

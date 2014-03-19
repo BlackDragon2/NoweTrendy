@@ -12,7 +12,9 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include "ImagesBatch.h"
-#include "Kernels.h"
+#include "GPU/Normalizations.cuh"
+#include "GPU/GpuBuffer.cuh"
+#include "Types.h"
 
 
 int main()
@@ -28,31 +30,28 @@ int main()
 	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
 	double spc = 1.0 / freq;
 
-	cnn::ImagesBatch b = cnn::ImagesBatch::fromFiles(files);
+	std::shared_ptr<cnn::ImagesBatch<uint>> b = cnn::ImagesBatch<uint>::fromFiles(files);
 	{
 		cv::namedWindow("some name23", CV_WINDOW_AUTOSIZE);
 
-		// <<<216, 500>>>
-		// 216 blocks per 500 threads
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s1));
 
-		uchar* imgsOnDev;
-		cudaMalloc<uchar>(&imgsOnDev, b.getBatchSize());
+		cnn::gpu::GpuBuffer<uint> devbuffer(b->getBatchUnitSize());
 
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s12));
 		
-		cudaMemcpy(imgsOnDev, b.getImagesData(), b.getBatchSize(), cudaMemcpyHostToDevice);
+		devbuffer.writeToDevice(b->getImagesData(), b->getBatchUnitSize());
 		
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s2));
 		
-		centerImages<<<216, 500>>>(imgsOnDev, b.getImageByteSize(), b.getImagesCount());
-		cudaDeviceSynchronize();
+		cnn::gpu::Normalizations<uint>::centerize(b, devbuffer);
+		
+		assert(cudaDeviceSynchronize() == cudaSuccess);
 		
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e1));
 		
-		cudaMemcpy(b.getImagesData(), imgsOnDev, b.getBatchSize(), cudaMemcpyDeviceToHost);
-		cudaFree(imgsOnDev);
-		
+		devbuffer.loadFromDevice(b->getImagesData(), b->getBatchUnitSize());
+
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e2));
 		
 		std::cout << "allocation:     " << double(s12 - s1) * spc << std::endl;
@@ -61,7 +60,7 @@ int main()
 		std::cout << "recv & dealloc: " << double(e2 - e1) * spc << std::endl;
 		std::cout << "all:            " << double(e2 - s1) * spc << std::endl;
 
-		cv::imshow("some name23", b.getImageAsMat(1));
+		cv::imshow("some name23", b->getImageAsMat(17));
 	}
 	cv::waitKey(0);
 
