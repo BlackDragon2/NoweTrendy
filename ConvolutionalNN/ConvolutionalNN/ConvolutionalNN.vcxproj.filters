@@ -13,6 +13,9 @@
     <Filter Include="Headers\Utils">
       <UniqueIdentifier>{ec5497f8-3a1a-416d-ac5e-cd46e7008257}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Sources\Utils">
+      <UniqueIdentifier>{267770aa-8863-4cef-8c94-915f2a4a7e08}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utils\Utils.h">
@@ -30,10 +33,18 @@
     <ClInclude Include="Types.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Utils\FoldsFactory.h">
+      <Filter>Headers\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="main.cu">
       <Filter>Sources</Filter>
     </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Utils\FoldsFactory.cpp">
+      <Filter>Sources\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

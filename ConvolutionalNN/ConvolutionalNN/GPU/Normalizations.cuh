@@ -106,6 +106,9 @@ namespace cnn {
 
 template <typename T>
 class Normalizations {
+private:
+	static const size_t THREADS = 512UL;
+
 public:
 	static void centerize(ImagesBatch<T>::PtrS& pImageBatch, GpuBuffer<T>& pBuffer);
 	static void centerize(ImagesBatch<T>::PtrS& pImageBatch);
@@ -117,8 +120,8 @@ void Normalizations<T>::centerize(ImagesBatch<T>::PtrS& pImageBatch, GpuBuffer<T
 	T* imgsData		= &pBuffer;
 	size_t imgSize	= pImageBatch->getAlignedImageUnitSize();
 	size_t imgCount	= pImageBatch->getImagesCount(); 
-	size_t blocks	= static_cast<size_t>(std::ceil(static_cast<double>(imgSize) / 512));
-	centerImages<<<blocks, 512>>>(imgsData, imgSize, imgCount);
+	size_t blocks	= static_cast<size_t>(std::ceil(static_cast<double>(imgSize) / THREADS));
+	centerImages<<<blocks, THREADS>>>(imgsData, imgSize, imgCount);
 }
 
 
