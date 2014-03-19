@@ -59,7 +59,8 @@ __global__ void centerImages(
 }
 
 
-// about 2.8x times faster tha uchar
+// about 3.12x times faster than uchar for 20 images
+// about 3.47x times faster than uchar for 200 images
 __global__ void centerImages(
 	uint*	pImages, 
 	size_t	pImageSize, 
@@ -73,13 +74,13 @@ __global__ void centerImages(
 	size_t sum1 = 0UL;
 	size_t sum2 = 0UL;
 	size_t sum3 = 0UL;
+
 	for(size_t i=0UL; i<pImageCount; ++i){
 		uint val = *(pImages + pImageSize * i + idx);
-		uint mod = 0xFF;
-		sum0 += (val & (mod			));
-		sum1 += (val & (mod << 8	)) >> 8;
-		sum2 += (val & (mod << 16	)) >> 16;
-		sum3 += (val & (mod << 24	)) >> 24;
+		sum0 += (val & 0x000000FF);
+		sum1 += (val & 0x0000FF00) >> 8;
+		sum2 += (val & 0x00FF0000) >> 16;
+		sum3 += (val & 0xFF000000) >> 24;
 	}
 
 	size_t mean0 = (sum0 / pImageCount);
@@ -90,12 +91,10 @@ __global__ void centerImages(
 	for(size_t i=0UL; i<pImageCount; ++i){
 		size_t* adr = pImages + pImageSize * i + idx;
 		uint	val = *adr;
-		uint	res = 0UL;
-		uint	mod = 0xFF;
-		val -= MIN(mean0, val & (mod		));
-		val -= MIN(mean1, val & (mod << 8	));
-		val -= MIN(mean2, val & (mod << 16	));
-		val -= MIN(mean3, val & (mod << 24	));
+		val -= MIN(mean0, val & 0x000000FF);
+		val -= MIN(mean1, val & 0x0000FF00);
+		val -= MIN(mean2, val & 0x00FF0000);
+		val -= MIN(mean3, val & 0xFF000000);
 		*(adr) = val;
 	}
 }
@@ -125,7 +124,10 @@ void Normalizations<T>::centerize(ImagesBatch<T>::PtrS& pImageBatch, GpuBuffer<T
 
 template <typename T>
 void Normalizations<T>::centerize(ImagesBatch<T>::PtrS& pImageBatch){
-	//centerize(pImageBatch, GpuBuffer<T>(pImageBatch->getAlignedImageByteSize(), pImageBatch->getImagesData()));
+	// !!! NOT VALID YET
+	GpuBuffer<T> buf(pImageBatch->getAlignedImageByteSize(), pImageBatch->getImagesData());
+	centerize(pImageBatch, buf);
+	buf.loadFromDevice(pImageBatch->getImagesData(), pImageBatch->getBatchUnitSize());
 }
 
 

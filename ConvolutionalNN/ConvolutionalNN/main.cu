@@ -20,11 +20,13 @@
 int main()
 {
 	std::vector<std::string> files;
-	for(size_t i=1UL; i<=20; ++i){
-		std::stringstream path;
-		path << "data/phughe/phughe." << i << ".jpg";
-		files.push_back(path.str());
-	}
+	//for(size_t a=0UL; a<10UL; ++a){
+		for(size_t i=1UL; i<=20; ++i){
+			std::stringstream path;
+			path << "data/phughe/phughe." << i << ".jpg";
+			files.push_back(path.str());
+		}
+	//}
 
 	__int64 freq, s1, s12, s2, e1, e2;
 	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
@@ -41,6 +43,7 @@ int main()
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s12));
 		
 		devbuffer.writeToDevice(b->getImagesData(), b->getBatchUnitSize());
+		assert(cudaDeviceSynchronize() == cudaSuccess);
 		
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s2));
 		
