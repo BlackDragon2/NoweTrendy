@@ -35,10 +35,10 @@ public:
 	virtual ~ConvolutionalLayer();
 
 	
-	size_t getLayerUnitSize()			const;
-	size_t getLayerByteSize()			const;
-	size_t getLayerAlignedByteSize()	const;
-	size_t getLayerAlignedUnitSize()	const;
+	size_t getMapUnitSize()			const;
+	size_t getMapByteSize()			const;
+	size_t getMapAlignedByteSize()	const;
+	size_t getMapAlignedUnitSize()	const;
 
 
 private:
@@ -66,7 +66,7 @@ ConvolutionalLayer<T>::ConvolutionalLayer(
 	mFiltersData(pFiltersData)
 {
 	if(pAllocateOnGpu)
-		mGpuBuffer.reallocateUnits(getLayerAlignedUnitSize() * mMapsData.count);
+		mGpuBuffer.allocateUnits(getMapAlignedUnitSize() * mMapsData.count);
 }
 
 
@@ -77,25 +77,25 @@ ConvolutionalLayer<T>::~ConvolutionalLayer(){
 
 
 template <typename T>
-size_t ConvolutionalLayer<T>::getLayerUnitSize() const {
+size_t ConvolutionalLayer<T>::getMapUnitSize() const {
 	return mDepth * mMapsData.width * mMapsData.height;
 }
 
 
 template <typename T>
-size_t ConvolutionalLayer<T>::getLayerByteSize() const {
+size_t ConvolutionalLayer<T>::getMapByteSize() const {
 	return getLayerUnitSize() * sizeof(T);
 }
 
 
 template <typename T>
-size_t ConvolutionalLayer<T>::getLayerAlignedByteSize()	const {
+size_t ConvolutionalLayer<T>::getMapAlignedByteSize()	const {
 	return utils::align<size_t>(getLayerByteSize(), sizeof(T));
 }
 
 
 template <typename T>
-size_t ConvolutionalLayer<T>::getLayerUnitSize() const {
+size_t ConvolutionalLayer<T>::getMapUnitSize() const {
 	return utils::align<size_t>(getLayerByteSize(), sizeof(T));
 }
 

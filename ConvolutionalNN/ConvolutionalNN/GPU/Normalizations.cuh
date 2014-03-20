@@ -41,21 +41,22 @@ __global__ void centerImagesWith(
 
 __global__ void centerImages(
 	uchar* pImages, 
-	size_t pImageSize, 
+	size_t pUnitImageSize, 
+	size_t pAlignedUnitImageSize,  
 	size_t pImageCount)
 {
 	unsigned int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
-	if(idx >= pImageSize)
+	if(idx >= pUnitImageSize)
 		return;
 
 	size_t sum = 0UL;
 	for(size_t i=0UL; i<pImageCount; ++i)
-		sum += *(pImages + pImageSize * i + idx);
+		sum += *(pImages + pAlignedUnitImageSize * i + idx);
 
 	uchar mean = static_cast<uchar>(sum / pImageCount);
 
 	for(size_t i=0UL; i<pImageCount; ++i)
-		*(pImages + pImageSize * i + idx) -= MIN(mean, *(pImages + pImageSize * i + idx));
+		*(pImages + pAlignedUnitImageSize * i + idx) -= MIN(mean, *(pImages + pAlignedUnitImageSize * i + idx));
 }
 
 
@@ -63,11 +64,12 @@ __global__ void centerImages(
 // about 3.47x times faster than uchar for 200 images
 __global__ void centerImages(
 	uint*	pImages, 
-	size_t	pImageSize, 
+	size_t	pUnitImageSize, 
+	size_t	pAlignedUnitImageSize, 
 	size_t	pImageCount)
 {
 	unsigned int idx = ((blockIdx.x * blockDim.x) + threadIdx.x);
-	if(idx >= pImageSize)
+	if(idx >= pUnitImageSize)
 		return;
 
 	size_t sum0 = 0UL;
@@ -76,7 +78,7 @@ __global__ void centerImages(
 	size_t sum3 = 0UL;
 
 	for(size_t i=0UL; i<pImageCount; ++i){
-		uint val = *(pImages + pImageSize * i + idx);
+		uint val = *(pImages + pAlignedUnitImageSize * i + idx);
 		sum0 += (val & 0x000000FF);
 		sum1 += (val & 0x0000FF00) >> 8;
 		sum2 += (val & 0x00FF0000) >> 16;
@@ -89,7 +91,7 @@ __global__ void centerImages(
 	size_t mean3 = (sum3 / pImageCount) << 24;
 
 	for(size_t i=0UL; i<pImageCount; ++i){
-		size_t* adr = pImages + pImageSize * i + idx;
+		size_t* adr = pImages + pAlignedUnitImageSize * i + idx;
 		uint	val = *adr;
 		val -= MIN(mean0, val & 0x000000FF);
 		val -= MIN(mean1, val & 0x0000FF00);
@@ -117,17 +119,18 @@ public:
 
 template <typename T>
 void Normalizations<T>::centerize(ImagesBatch<T>::PtrS& pImageBatch, GpuBuffer<T>& pBuffer){
-	T* imgsData		= &pBuffer;
-	size_t imgSize	= pImageBatch->getAlignedImageUnitSize();
-	size_t imgCount	= pImageBatch->getImagesCount(); 
-	size_t blocks	= static_cast<size_t>(std::ceil(static_cast<double>(imgSize) / THREADS));
-	centerImages<<<blocks, THREADS>>>(imgsData, imgSize, imgCount);
+	T* imgsData			= &pBuffer;
+	size_t imgSize		= pImageBatch->getImageUnitSize();
+	size_t aligImgSize	= pImageBatch->getAlignedImageUnitSize();
+	size_t imgCount		= pImageBatch->getImagesCount(); 
+	size_t blocks		= static_cast<size_t>(std::ceil(static_cast<double>(imgSize) / THREADS));
+	centerImages<<<blocks, THREADS>>>(imgsData, imgSize, aligImgSize, imgCount);
 }
 
 
+// !!! NOT VALID YET
 template <typename T>
 void Normalizations<T>::centerize(ImagesBatch<T>::PtrS& pImageBatch){
-	// !!! NOT VALID YET
 	GpuBuffer<T> buf(pImageBatch->getAlignedImageByteSize(), pImageBatch->getImagesData());
 	centerize(pImageBatch, buf);
 	buf.loadFromDevice(pImageBatch->getImagesData(), pImageBatch->getBatchUnitSize());

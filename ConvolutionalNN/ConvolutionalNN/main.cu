@@ -74,7 +74,7 @@ int main()
 		std::cout << "recv & dealloc: " << double(e2 - e1) * spc << std::endl;
 		std::cout << "all:            " << double(e2 - s1) * spc << std::endl;
 
-		cv::imshow("some name23", b->getImageAsMat(19));
+		cv::imshow("some name23", b->getImageAsMat(17));
 	}
 	cv::waitKey(0);
 
