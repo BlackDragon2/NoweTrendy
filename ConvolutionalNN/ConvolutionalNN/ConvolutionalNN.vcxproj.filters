@@ -36,6 +36,12 @@
     <ClInclude Include="Utils\FoldsFactory.h">
       <Filter>Headers\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="GPU\ConvolutionalLayer.h">
+      <Filter>Headers\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\ConvolutionalNeuralNetwork.h">
+      <Filter>Headers\GPU</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="main.cu">

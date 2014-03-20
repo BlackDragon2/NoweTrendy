@@ -38,6 +38,11 @@ public:
 
 
 private:
+	GpuBuffer(GpuBuffer<T> const& pBuffer);
+	GpuBuffer<T>& operator=(GpuBuffer<T> const& pBuffer);
+
+
+private:
 	T*		mAddress;
 	size_t	mBufferByteSize;
 };
@@ -97,7 +102,8 @@ void GpuBuffer<T>::allocateUnits(size_t pBufferUnitsCount){
 template <typename T>
 void GpuBuffer<T>::free(){
 	if(mAddress != nullptr){
-		cudaFree(reinterpret_cast<void*>(mAddress));
+		cudaError_t result = cudaFree(reinterpret_cast<void*>(mAddress));
+		assert(result == cudaSuccess);
 		mAddress		= nullptr;
 		mBufferByteSize = 0UL;
 	}
