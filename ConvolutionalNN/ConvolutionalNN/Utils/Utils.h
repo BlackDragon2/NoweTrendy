@@ -24,6 +24,15 @@ size_t getCvMatBytesCount(cv::Mat const& pMat){
 }
 
 
+int bigRand(){
+	return
+		((rand() & 0x00FF)			) |
+		((rand() & 0x00FF) << 8		) |
+		((rand() & 0x00FF) << 16	) |
+		((rand() & 0x7F00) << 24	);
+}
+
+
 	}
 }
 
