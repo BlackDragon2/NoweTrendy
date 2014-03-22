@@ -101,25 +101,14 @@ __global__ void centerImages(
 	}
 }
 
-/*
-template <typename From, typename To>
-__global__ void normalize(
-	From*	pImages, 
-	From	pInputMaxValue,
-	size_t	pInputUnitsSize,
-	size_t	pInputPackDensity,
-	To*		pOutputData)
-{
-	unsigned int idx = ((blockIdx.x * blockDim.x) + threadIdx.x);
-	if(idx >= pSize)
-		return;
 
-	while(pInputPackDensity-- > 0UL){
-		To val = static_cast<To>(*(pImages + idx + pInputPackDensity)) / pMaxValue;
-		*(pOutputData + idx + pInputPackDensity) = val;
-	}
+template <typename T, typename U>
+__global__ void normalize(
+	T* pInput,
+	U* pOutput)
+{
+
 }
-*/
 
 
 namespace cnn {
@@ -129,58 +118,42 @@ namespace cnn {
 class Normalizations {
 private:
 	static const size_t THREADS = 512UL;
-/*
-public:
-	template <typename T>
-	static void centerize(
-		ImagesBatch<T>::PtrS&	pImageBatch, 
-		GpuBuffer<T>&			pBuffer,
-		size_t					pThreadsPerUnit = 1UL);
 
-	
-	template <typename From, typename To>
-	static void normalize(
-		GpuBuffer<From>&	pBufferInput,
-		From				pMaxValue,
-		size_t				pInputPackDensity,
-		GpuBuffer<To>&		pBufferOutput);
+public:
+	template <typename T> static void centerize(
+		ImagesBatch::PtrS&	pImageBatch, 
+		GpuBuffer&			pBuffer);
+
+	template <typename T, typename U> static void normalize(
+		GpuBuffer& pInput,
+		GpuBuffer& pOutput);
 };
 
 
-// threadsPerUnit:
-// uchar	1
-// uint		1
-// float	TODO	4 
+
 template <typename T>
 void Normalizations::centerize(
-	ImagesBatch<T>::PtrS&	pImageBatch, 
-	GpuBuffer<T>&			pBuffer,
-	size_t					pThreadsPerUnit)
+	ImagesBatch::PtrS&	pImageBatch, 
+	GpuBuffer&			pBuffer)
 {
-	T*		imgsData	= &pBuffer;
-	size_t	imgSize		= pImageBatch->getImageUnitSize();
-	size_t	aligImgSize	= pImageBatch->getAlignedImageUnitSize();
-	size_t	imgCount	= pImageBatch->getImagesCount(); 
-	size_t	blocks		= static_cast<size_t>(std::ceil(
-		static_cast<double>(imgSize * pThreadsPerUnit) / THREADS));
-	centerImages<<<blocks, THREADS>>>(imgsData, imgSize, aligImgSize, imgCount);
+	T*		imgsData		= pBuffer.dataPtr<T>();
+	size_t	imgUnitSize		= pImageBatch->getImageByteSize();
+	size_t	aligImgUnitSize	= pImageBatch->getAlignedImageByteSize() / sizeof(T);
+	size_t	imgCount		= pImageBatch->getImagesCount(); 
+	size_t	blocks			= static_cast<size_t>(std::ceil(
+		static_cast<double>(aligImgUnitSize) / THREADS));
+	centerImages<<<blocks, THREADS>>>(imgsData, imgUnitSize, aligImgUnitSize, imgCount);
 }
 
 
-template <typename From, typename To>
-void Normalizations::normalize(
-	GpuBuffer<From>&	pBufferInput,
-	From				pMaxValue,
-	size_t				pInputPackDensity,
-	GpuBuffer<To>&		pBufferOutput)
+template <typename T, typename U> 
+static void normalize(
+	GpuBuffer&	pInput,
+	GpuBuffer&	pOutput)
 {
-	From*	imgsData	= &pBufferInput;
-	To*		outputData	= &pBufferOutput;	
-	size_t	unitSize	= pBufferInput->getBufferUnitSize();
-	size_t	blocks		= static_cast<size_t>(std::ceil(
-		static_cast<double>(pBufferInput->getBufferByteSize()) / (THREADS * pInputPackDensity)));
-	normalize<<<blocks, THREADS>>>(imgsData, pMaxValue, unitSize, pInputPackDensity, outputData);*/
-};
+	T* input	= pInput.dataPtr<T>();
+	U* output	= pInput.dataPtr<U>();
+}
 
 
 	}

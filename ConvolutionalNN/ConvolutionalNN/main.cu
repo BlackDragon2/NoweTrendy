@@ -61,7 +61,7 @@ int main()
 		
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s2));
 		
-		//cnn::gpu::Normalizations::centerize<uint>(b, devbuffer);
+		cnn::gpu::Normalizations::centerize<uint>(b, devbuffer);
 		
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 		

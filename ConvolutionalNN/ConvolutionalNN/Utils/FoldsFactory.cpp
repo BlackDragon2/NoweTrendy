@@ -2,6 +2,7 @@
 #include <algorithm>
 
 #include "FoldsFactory.h"
+#include "Utils.h"
 
 
 namespace cnn {
@@ -21,7 +22,7 @@ std::shared_ptr<std::vector<size_t>> FoldsFactory::prepareFoldVector(
 		(*v)[i] = i;
 
 	for(size_t i=pElementsCount; i<v->size(); ++i)
-		(*v)[i] = rand() % pElementsCount;
+		(*v)[i] = bigRand64() % pElementsCount;
 
 	std::random_shuffle(v->begin(), v->end());
 	return v;
@@ -37,7 +38,7 @@ std::shared_ptr<std::vector<size_t>> FoldsFactory::prepareFoldVectorWithCopies(
 	acquireFitTactic(pFoldsCount, pFitTactic, *v);
 
 	for(size_t i=0UL; i<v->size(); ++i)
-		(*v)[i] = rand() % v->size();
+		(*v)[i] = bigRand64() % v->size();
 	
 	return v;
 }
