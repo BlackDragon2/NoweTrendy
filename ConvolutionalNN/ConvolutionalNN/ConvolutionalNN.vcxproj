@@ -160,6 +160,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <CudaCompile Include="GPU\GpuBuffer.cu" />
     <CudaCompile Include="main.cu" />
   </ItemGroup>
   <ItemGroup>
@@ -173,7 +174,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Utils\Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ImagesBatch.cpp" />
     <ClCompile Include="Utils\FoldsFactory.cpp" />
+    <ClCompile Include="Utils\Utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -16,6 +16,9 @@
     <Filter Include="Sources\Utils">
       <UniqueIdentifier>{267770aa-8863-4cef-8c94-915f2a4a7e08}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Sources\GPU">
+      <UniqueIdentifier>{d45a70f4-0de3-4b33-b69b-4411d743508a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utils\Utils.h">
@@ -47,9 +50,18 @@
     <CudaCompile Include="main.cu">
       <Filter>Sources</Filter>
     </CudaCompile>
+    <CudaCompile Include="GPU\GpuBuffer.cu">
+      <Filter>Sources\GPU</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Utils\FoldsFactory.cpp">
+      <Filter>Sources\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ImagesBatch.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Utils.cpp">
       <Filter>Sources\Utils</Filter>
     </ClCompile>
   </ItemGroup>

@@ -101,7 +101,7 @@ __global__ void centerImages(
 	}
 }
 
-
+/*
 template <typename From, typename To>
 __global__ void normalize(
 	From*	pImages, 
@@ -119,7 +119,7 @@ __global__ void normalize(
 		*(pOutputData + idx + pInputPackDensity) = val;
 	}
 }
-
+*/
 
 
 namespace cnn {
@@ -129,7 +129,7 @@ namespace cnn {
 class Normalizations {
 private:
 	static const size_t THREADS = 512UL;
-
+/*
 public:
 	template <typename T>
 	static void centerize(
@@ -179,8 +179,8 @@ void Normalizations::normalize(
 	size_t	unitSize	= pBufferInput->getBufferUnitSize();
 	size_t	blocks		= static_cast<size_t>(std::ceil(
 		static_cast<double>(pBufferInput->getBufferByteSize()) / (THREADS * pInputPackDensity)));
-	normalize<<<blocks, THREADS>>>(imgsData, pMaxValue, unitSize, pInputPackDensity, outputData);
-}
+	normalize<<<blocks, THREADS>>>(imgsData, pMaxValue, unitSize, pInputPackDensity, outputData);*/
+};
 
 
 	}

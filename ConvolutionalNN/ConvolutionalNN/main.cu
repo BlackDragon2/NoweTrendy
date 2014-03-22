@@ -43,28 +43,31 @@ int main()
 	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
 	double spc = 1.0 / freq;
 
-	std::shared_ptr<cnn::ImagesBatch<uint>> b = cnn::ImagesBatch<uint>::fromFiles(files);
+	std::shared_ptr<cnn::ImagesBatch> b = cnn::ImagesBatch::fromFiles(files);
 	{
 		cv::namedWindow("some name23", CV_WINDOW_AUTOSIZE);
+		cv::namedWindow("some name24", CV_WINDOW_AUTOSIZE);
+
+		cv::imshow("some name23", b->getImageAsMat(19));
 
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s1));
 
-		cnn::gpu::GpuBuffer<uint> devbuffer(b->getBatchUnitSize());
+		cnn::gpu::GpuBuffer devbuffer(b->getBatchByteSize());
 
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s12));
 		
-		devbuffer.writeToDevice(b->getImagesData(), b->getBatchUnitSize());
+		devbuffer.writeToDevice(b->getImagesData(), b->getBatchByteSize());
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 		
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s2));
 		
-		cnn::gpu::Normalizations::centerize<uint>(b, devbuffer);
+		//cnn::gpu::Normalizations::centerize<uint>(b, devbuffer);
 		
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 		
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e1));
 		
-		devbuffer.loadFromDevice(b->getImagesData(), b->getBatchUnitSize());
+		devbuffer.loadFromDevice(b->getImagesData(), b->getBatchByteSize());
 
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e2));
 		
@@ -74,7 +77,7 @@ int main()
 		std::cout << "recv & dealloc: " << double(e2 - e1) * spc << std::endl;
 		std::cout << "all:            " << double(e2 - s1) * spc << std::endl;
 
-		cv::imshow("some name23", b->getImageAsMat(17));
+		cv::imshow("some name24", b->getImageAsMat(19));
 	}
 	cv::waitKey(0);
 
