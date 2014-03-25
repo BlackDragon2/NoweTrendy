@@ -20,8 +20,8 @@ public:
 
 	enum ImageType {
 		UNCHANGED	= CV_LOAD_IMAGE_UNCHANGED,
-		COLOR		= CV_LOAD_IMAGE_COLOR,
-		GRAY		= CV_LOAD_IMAGE_GRAYSCALE
+		GRAY		= CV_LOAD_IMAGE_GRAYSCALE,
+		COLOR		= CV_LOAD_IMAGE_COLOR
 	};
 
 
@@ -42,7 +42,7 @@ public:
 	virtual ~ImagesBatch();
 
 
-	cv::Mat getImageAsMat(size_t pIndex);
+	cv::Mat getImageAsMat(size_t pIndex, int pCvFormat);
 	
 	void allocateSpaceForImages(size_t pCount);
 	
@@ -60,11 +60,11 @@ public:
 	size_t getImageByteSize()			const;
 	size_t getAlignedImageByteSize()	const;
 
-	uchar*			getImagesData();
-	uchar const*	getImagesData() const;
+	uchar*			getImagesDataPtr();
+	uchar const*	getImagesDataPtr() const;
 	
-	uchar*			getImageData(size_t pIndex);
-	uchar const* 	getImageData(size_t pIndex) const;
+	uchar*			getImageDataPtr(size_t pIndex);
+	uchar const* 	getImageDataPtr(size_t pIndex) const;
 
 	size_t getBatchByteSize()	const;
 	size_t getImagesCount()		const;

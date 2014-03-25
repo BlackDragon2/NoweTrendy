@@ -45,6 +45,9 @@
     <ClInclude Include="GPU\ConvolutionalNeuralNetwork.h">
       <Filter>Headers\GPU</Filter>
     </ClInclude>
+    <ClInclude Include="ImageBatch.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="main.cu">
@@ -63,6 +66,9 @@
     </ClCompile>
     <ClCompile Include="Utils\Utils.cpp">
       <Filter>Sources\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageBatch.cpp">
+      <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -61,7 +61,7 @@ ImagesBatch::~ImagesBatch(){
 
 
 cv::Mat ImagesBatch::getImageAsMat(size_t pIndex){
-	return cv::Mat(mImageHeight, mImageWidth, CV_8UC(mImageChannels), getImageData(pIndex));
+	return cv::Mat(mImageHeight, mImageWidth, CV_8UC(mImageChannels), getImageDataPtr(pIndex));
 }
 
 
@@ -125,23 +125,23 @@ size_t ImagesBatch::getAlignedImageByteSize() const {
 }
 
 
-uchar* ImagesBatch::getImagesData(){
+uchar* ImagesBatch::getImagesDataPtr(){
 	return mImagesData->data();
 }
 
 
-uchar const* ImagesBatch::getImagesData() const {
+uchar const* ImagesBatch::getImagesDataPtr() const {
 	return mImagesData->data();
 }
 
 
-uchar* ImagesBatch::getImageData(size_t pIndex){
+uchar* ImagesBatch::getImageDataPtr(size_t pIndex){
 	assert(pIndex < mImagesCount);
 	return mImagesData->data() + pIndex * getAlignedImageByteSize();
 }
 
 
-uchar const* ImagesBatch::getImageData(size_t pIndex) const {
+uchar const* ImagesBatch::getImageDataPtr(size_t pIndex) const {
 	assert(pIndex < mImagesCount);
 	return mImagesData->data() + pIndex * getAlignedImageByteSize();
 }

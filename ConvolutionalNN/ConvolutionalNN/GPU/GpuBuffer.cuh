@@ -30,8 +30,8 @@ public:
 	template <typename T> void loadFromDevice(T* pData, size_t pElementsCount);
 
 
-	template <typename T> T*		dataPtr();
-	template <typename T> T const*	dataPtr() const;
+	template <typename T> T*		getDataPtr();
+	template <typename T> T const*	getDataPtr() const;
 
 	template <typename T> T*		operator&();
 	template <typename T> T const*	operator&() const;
@@ -53,14 +53,14 @@ private:
 
 
 template <typename T> 
-GpuBuffer::GpuBuffer(size_t pBufferUnitsCount, T* pData, size_t pByteAlignment)
+GpuBuffer::GpuBuffer(size_t pElementsCount, T* pData, size_t pByteAlignment)
 :
 	mAddress(nullptr),
 	mByteSize(0UL),
 	mByteAlignment(0UL)
 {
-	allocate(pBufferUnitsCount, pByteAlignment);
-	writeToDevice(pData, pBufferUnitsCount);
+	allocate(pElementsCount, pByteAlignment);
+	writeToDevice(pData, pElementsCount);
 }
 
 
@@ -82,26 +82,26 @@ void GpuBuffer::loadFromDevice(T* pData, size_t pElementsCount){
 
 
 template <typename T>
-T* GpuBuffer::dataPtr(){
+T* GpuBuffer::getDataPtr(){
 	return reinterpret_cast<T*>(mAddress);
 }
 
 
 template <typename T>
-T const* GpuBuffer::dataPtr() const {
+T const* GpuBuffer::getDataPtr() const {
 	return reinterpret_cast<T const*>(mAddress);
 }
 
 
 template <typename T>
 T* GpuBuffer::operator&(){
-	return dataPtr<T>();
+	return getDataPtr<T>();
 }
 
 
 template <typename T>
 T const* GpuBuffer::operator&() const {
-	return dataPtr<T>();
+	return getDataPtr<T>();
 }
 
 

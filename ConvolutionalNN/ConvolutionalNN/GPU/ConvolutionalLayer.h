@@ -47,10 +47,9 @@ private:
 
 
 private:
-	GpuBuffer<T>	mGpuBuffer;
+	GpuBuffer		mGpuBuffer;
 	MapsData		mMapsData;
 	FiltersData		mFiltersData;
-	size_t			mDepth;
 };
 
 

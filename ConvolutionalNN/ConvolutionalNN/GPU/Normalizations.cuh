@@ -104,9 +104,15 @@ __global__ void centerImages(
 
 template <typename T, typename U>
 __global__ void normalize(
-	T* pInput,
-	U* pOutput)
+	T*		pInput,
+	size_t	pInputSize,
+	T		pInputMultiplier,
+	U*		pOutput)
 {
+	unsigned int idx = ((blockIdx.x * blockDim.x) + threadIdx.x);
+	if(idx >= pInputSize)
+		return;
+
 
 }
 
@@ -149,10 +155,17 @@ void Normalizations::centerize(
 template <typename T, typename U> 
 static void normalize(
 	GpuBuffer&	pInput,
+	T			pInputMultiplier,
 	GpuBuffer&	pOutput)
 {
-	T* input	= pInput.dataPtr<T>();
-	U* output	= pInput.dataPtr<U>();
+	T*		input		= pInput.dataPtr<T>();
+	U*		output		= pInput.dataPtr<U>();
+	size_t	inputSize	= pInput.getByteSize() / sizeof(T);
+
+	size_t blocks = static_cast<size_t>(std::ceil(
+		static_cast<double>(inputSize) / THREADS));
+
+	normalize<T, U><<<blocks, THREADS>>>(input, inputSize, pInputMultiplier, output);
 }
 
 
