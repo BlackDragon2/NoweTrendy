@@ -1,4 +1,6 @@
 
+#include <algorithm>
+
 #include "Utils.h"
 
 
@@ -8,11 +10,6 @@ namespace cnn {
 
 size_t align(size_t pValue, size_t pAlign){
 	return static_cast<size_t>((std::ceil(static_cast<double>(pValue) / pAlign)) * pAlign);
-}
-
-
-size_t getCvMatBytesCount(cv::Mat const& pMat){
-	return static_cast<size_t>(pMat.size().area() * pMat.channels() * sizeof(uchar));
 }
 
 

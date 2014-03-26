@@ -7,7 +7,7 @@
 
 #include "../Types.h"
 #include "GpuBuffer.cuh"
-#include "../ImagesBatch.h"
+//#include "../ImagesBatch.h"
 
 
 __global__ void meanImageFrom(
@@ -120,7 +120,7 @@ __global__ void normalize(
 namespace cnn {
 	namespace gpu {
 
-
+/*
 class Normalizations {
 private:
 	static const size_t THREADS = 512UL;
@@ -168,7 +168,7 @@ static void normalize(
 	normalize<T, U><<<blocks, THREADS>>>(input, inputSize, pInputMultiplier, output);
 }
 
-
+*/
 	}
 }
 

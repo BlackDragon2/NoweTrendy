@@ -24,9 +24,6 @@
     <ClInclude Include="Utils\Utils.h">
       <Filter>Headers\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="ImagesBatch.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="GPU\GpuBuffer.cuh">
       <Filter>Headers\GPU</Filter>
     </ClInclude>
@@ -48,6 +45,9 @@
     <ClInclude Include="ImageBatch.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Utils\CvUtils.h">
+      <Filter>Headers\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="main.cu">
@@ -61,14 +61,11 @@
     <ClCompile Include="Utils\FoldsFactory.cpp">
       <Filter>Sources\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="ImagesBatch.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="Utils\Utils.cpp">
       <Filter>Sources\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="ImageBatch.cpp">
-      <Filter>Sources</Filter>
+    <ClCompile Include="Utils\CvUtils.cpp">
+      <Filter>Sources\Utils</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

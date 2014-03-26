@@ -43,16 +43,16 @@ int main()
 	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
 	double spc = 1.0 / freq;
 
-	std::shared_ptr<cnn::ImageBatch> b = cnn::ImageBatch::fromFiles(files);
+	std::shared_ptr<cnn::ImageBatch<uchar>> b = cnn::ImageBatch<uchar>::fromFiles(files);
 	{
 		cv::namedWindow("some name23", CV_WINDOW_AUTOSIZE);
 		cv::namedWindow("some name24", CV_WINDOW_AUTOSIZE);
 
-		cv::imshow("some name23", b->getImageAsMat(19));
+		cv::imshow("some name23", b->retriveImageAsMat(19));
 
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s1));
 
-		cnn::gpu::GpuBuffer devbuffer(b->getBatchByteSize());
+		/*cnn::gpu::GpuBuffer devbuffer(b->getBatchByteSize());
 
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s12));
 		
@@ -75,9 +75,9 @@ int main()
 		std::cout << "send:           " << double(s2 - s12) * spc << std::endl;
 		std::cout << "comp:           " << double(e1 - s2) * spc << std::endl;
 		std::cout << "recv & dealloc: " << double(e2 - e1) * spc << std::endl;
-		std::cout << "all:            " << double(e2 - s1) * spc << std::endl;
+		std::cout << "all:            " << double(e2 - s1) * spc << std::endl;*/
 
-		cv::imshow("some name24", b->getImageAsMat(19));
+		cv::imshow("some name24", b->retriveImageAsMat(19));
 	}
 	cv::waitKey(0);
 

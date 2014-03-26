@@ -1,4 +1,8 @@
 
+#ifndef CNN_FOLDS_FACTORY_H_
+#define CNN_FOLDS_FACTORY_H_
+
+
 #include <memory>
 #include <vector>
 
@@ -38,3 +42,6 @@ private:
 
 	}
 }
+
+
+#endif	/* #ifndef CNN_FOLDS_FACTORY_H_ */
