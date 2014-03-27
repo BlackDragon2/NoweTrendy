@@ -1,13 +1,13 @@
 
-#ifndef CNN_NORMALIZATIONS_H_
-#define CNN_NORMALIZATIONS_H_
+#ifndef CNN_TASKS_H_
+#define CNN_TASKS_H_
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-#include "../Types.h"
 #include "GpuBuffer.cuh"
-//#include "../ImagesBatch.h"
+#include "../Types.h"
+#include "../ImageBatch.h"
 
 
 __global__ void meanImageFrom(
@@ -102,48 +102,34 @@ __global__ void centerImages(
 }
 
 
-template <typename T, typename U>
-__global__ void normalize(
-	T*		pInput,
-	size_t	pInputSize,
-	T		pInputMultiplier,
-	U*		pOutput)
-{
-	unsigned int idx = ((blockIdx.x * blockDim.x) + threadIdx.x);
-	if(idx >= pInputSize)
-		return;
-
-
-}
-
-
 namespace cnn {
 	namespace gpu {
 
-/*
-class Normalizations {
+
+class Tasks {
 private:
 	static const size_t THREADS = 512UL;
 
 public:
-	template <typename T> static void centerize(
-		ImagesBatch::PtrS&	pImageBatch, 
-		GpuBuffer&			pBuffer);
+	/*template <typename T> static void meanImageFrom(
+		std::shared_ptr<ImageBatch<T>>&	pImageBatch, 
+		GpuBuffer&						pBufferInput,
+		GpuBuffer&						pBufferOutput);*/
 
-	template <typename T, typename U> static void normalize(
-		GpuBuffer& pInput,
-		GpuBuffer& pOutput);
+	template <typename T> static void centerize(
+		std::shared_ptr<ImageBatch<T>>&	pImageBatch, 
+		GpuBuffer&						pBuffer);
 };
 
 
 
 template <typename T>
-void Normalizations::centerize(
-	ImagesBatch::PtrS&	pImageBatch, 
-	GpuBuffer&			pBuffer)
+void Tasks::centerize(
+	std::shared_ptr<ImageBatch<T>>&	pImageBatch, 
+	GpuBuffer&						pBuffer)
 {
-	T*		imgsData		= pBuffer.dataPtr<T>();
-	size_t	imgUnitSize		= pImageBatch->getImageByteSize();
+	T*		imgsData		= pBuffer.getDataPtr<T>();
+	size_t	imgUnitSize		= pImageBatch->getImageByteSize() / sizeof(T);
 	size_t	aligImgUnitSize	= pImageBatch->getAlignedImageByteSize() / sizeof(T);
 	size_t	imgCount		= pImageBatch->getImagesCount(); 
 	size_t	blocks			= static_cast<size_t>(std::ceil(
@@ -152,25 +138,23 @@ void Normalizations::centerize(
 }
 
 
-template <typename T, typename U> 
-static void normalize(
-	GpuBuffer&	pInput,
-	T			pInputMultiplier,
-	GpuBuffer&	pOutput)
+template <>
+void Tasks::centerize<uchar>(
+	std::shared_ptr<ImageBatch<uchar>>&	pImageBatch, 
+	GpuBuffer&							pBuffer)
 {
-	T*		input		= pInput.dataPtr<T>();
-	U*		output		= pInput.dataPtr<U>();
-	size_t	inputSize	= pInput.getByteSize() / sizeof(T);
-
-	size_t blocks = static_cast<size_t>(std::ceil(
-		static_cast<double>(inputSize) / THREADS));
-
-	normalize<T, U><<<blocks, THREADS>>>(input, inputSize, pInputMultiplier, output);
+	uint*	imgsData	= pBuffer.getDataPtr<uint>();
+	size_t	imgUnitSize	= pImageBatch->getImageByteSize() >> 2;
+	size_t	threads		= pImageBatch->getAlignmentImageByteSize() >> 2;
+	size_t	imgCount	= pImageBatch->getImagesCount(); 
+	size_t	blocks		= static_cast<size_t>(std::ceil(
+		static_cast<double>(threads) / THREADS));
+	centerImages<<<blocks, THREADS>>>(imgsData, imgUnitSize, threads, imgCount);
 }
 
-*/
+
 	}
 }
 
 
-#endif	/* CNN_NORMALIZATIONS_H_ */
+#endif	/* CNN_TASKS_H_ */

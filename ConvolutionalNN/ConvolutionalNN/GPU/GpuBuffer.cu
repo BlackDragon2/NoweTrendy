@@ -34,10 +34,10 @@ GpuBuffer::~GpuBuffer(){
 
 
 void GpuBuffer::allocate(size_t pBytesCount, size_t pByteAlignment){
-	cudaError_t result = cudaMalloc<uchar>(&mAddress, pBytesCount);
-	assert(result == cudaSuccess);
-	mByteSize		= pBytesCount;
 	mByteAlignment	= pByteAlignment;
+	mByteSize		= utils::align(pBytesCount, pByteAlignment);
+	cudaError_t result = cudaMalloc<uchar>(&mAddress, mByteSize);
+	assert(result == cudaSuccess);
 }
 
 
@@ -59,7 +59,7 @@ void GpuBuffer::reallocate(size_t pBytesCount, size_t pByteAlignment){
 
 
 size_t GpuBuffer::getByteSize() const {
-	return utils::align(mByteSize, mByteAlignment);
+	return mByteSize;
 }
 
 

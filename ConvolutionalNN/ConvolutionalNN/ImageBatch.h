@@ -6,12 +6,14 @@
 #include <vector>
 #include <string>
 #include <assert.h>
+#include <limits>
 
 #include "Utils/Utils.h"
 #include "Utils/CvUtils.h"
 
 
 namespace cnn {
+
 
 
 template <typename T>
@@ -42,15 +44,17 @@ public:
 	void	copyFromBatchToMat(cv::Mat& pImage, size_t pFromIndex)	const;
 	cv::Mat retriveImageAsMat(size_t pImageIndex)					const;
 
+	std::vector<std::pair<T, T>> findImageMinMaxColors(size_t pImageIndex)	const;
+	std::vector<std::pair<T, T>> findImagesMinMaxColors()					const;
 
-	//template <typename From, typename To> std::shared_ptr<ImageBatch<uchar>> convertType();
+	//std::shared_ptr<ImageBatch>
 
 
 	size_t getImageWidth()	const;
 	size_t getImageHeight() const;
 
-	bool		isGray()		const;
-	bool		isColor()		const;
+	bool isGray()	const;
+	bool isColor()	const;
 
 	int	getImageChannelsCount() const;
 
@@ -62,7 +66,7 @@ public:
 	size_t getBatchByteCapacity()	const;
 	size_t getBatchByteSize()		const;
 	size_t getBatchImagesCapacity()	const;
-	size_t getBatchImagesCount()	const;
+	size_t getImagesCount()	const;
 
 	T*			getBatchDataPtr();
 	T const*	getBatchDataPtr() const;
@@ -174,8 +178,8 @@ void ImageBatch<T>::copyMatToBatch(cv::Mat const& pImage, size_t pUnderIndex){
 
 template <typename T>
 void ImageBatch<T>::addImage(cv::Mat const& pImage){
-	if(getBatchImagesCapacity() == getBatchImagesCount())
-		allocateSpaceForImages(static_cast<size_t>(std::sqrt(getBatchImagesCount())) + 1UL);
+	if(getBatchImagesCapacity() == getImagesCount())
+		allocateSpaceForImages(static_cast<size_t>(std::sqrt(getImagesCount())) + 1UL);
 	++mImagesCount;
 	copyMatToBatch(pImage, mImagesCount - 1UL);
 }
@@ -194,6 +198,47 @@ cv::Mat ImageBatch<T>::retriveImageAsMat(size_t pImageIndex) const {
 	cv::Mat mtx(mImageHeight, mImageWidth, utils::createCvImageType<T>(mImageChannels));
 	copyFromBatchToMat(mtx, pImageIndex);
 	return mtx;
+}
+
+
+template <typename T>
+std::vector<std::pair<T, T>> ImageBatch<T>::findImageMinMaxColors(size_t pImageIndex) const {
+	T min = std::numeric_limits<T>::min();
+	T max = std::numeric_limits<T>::max();
+	std::vector<std::pair<T, T>> res(mImageChannels, std::pair<T, T>(max, min));
+	for(size_t r=0UL; r<mImageHeight; ++r){
+		const T* row = getImageRowDataPtr(pImageIndex, r);
+		for(size_t c=0UL; c<mImageWidth * mImageChannels; c+=mImageChannels){
+			for(size_t v=0UL; v<mImageChannels; ++v){
+				T value = *(row + c + v);
+				if(res[v].first > value)
+					res[v].first = value;
+				if(res[v].second < value)
+					res[v].second = value;
+			}
+		}
+	}
+	return res;
+}
+
+
+template <typename T>
+std::vector<std::pair<T, T>> ImageBatch<T>::findImagesMinMaxColors() const {
+	T min = std::numeric_limits<T>::min();
+	T max = std::numeric_limits<T>::max();
+	std::vector<std::pair<T, T>> res(mImageChannels, std::pair<T, T>(max, min));
+	for(size_t i=0UL; i<mImagesCount; ++i){
+		std::vector<std::pair<T, T>> tmp = findImageMinMaxColors(i);
+		for(size_t v=0UL; v<mImageChannels; ++v){
+			min = tmp[v].first;
+			max = tmp[v].second;
+			if(res[v].first > min)
+				res[v].first = min;
+			if(res[v].second < max)
+				res[v].second = max;
+		}
+	}
+	return res;
 }
 
 
@@ -270,7 +315,7 @@ size_t ImageBatch<T>::getBatchImagesCapacity() const {
 
 
 template <typename T>
-size_t ImageBatch<T>::getBatchImagesCount() const {
+size_t ImageBatch<T>::getImagesCount() const {
 	return mImagesCount;
 }
 
@@ -314,21 +359,6 @@ T const* ImageBatch<T>::getImageRowDataPtr(size_t pIndex, size_t pRow) const {
 	return getImageDataPtr(pIndex) + pRow * getAlignmentImageRowByteSize();
 }
 
-/*
-template <typename From, typename To>
-ImageBatch::PtrS ImageBatch::convertType(){
-	PtrS newBatch(new ImageBatch(
-		mImageWidth,
-		mImageHeight,
-		mImageType,
-		mImageRowByteAlignment));
-
-	newBatch->allocateSpaceForImages(mImagesCount);
-	for(size_t i=0UL; i<getBatchByteSize() / sizeof(From); ++i)
-
-	return newBatch;
-}
-*/
 
 template <typename T> template<typename R> 
 R* ImageBatch<T>::getBatchDataPtrAs(){

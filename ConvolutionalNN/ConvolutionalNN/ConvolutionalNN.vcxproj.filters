@@ -27,9 +27,6 @@
     <ClInclude Include="GPU\GpuBuffer.cuh">
       <Filter>Headers\GPU</Filter>
     </ClInclude>
-    <ClInclude Include="GPU\Normalizations.cuh">
-      <Filter>Headers\GPU</Filter>
-    </ClInclude>
     <ClInclude Include="Types.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -47,6 +44,9 @@
     </ClInclude>
     <ClInclude Include="Utils\CvUtils.h">
       <Filter>Headers\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\Tasks.cuh">
+      <Filter>Headers\GPU</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

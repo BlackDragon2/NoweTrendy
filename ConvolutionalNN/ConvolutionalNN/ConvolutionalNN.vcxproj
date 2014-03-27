@@ -167,7 +167,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="GPU\ConvolutionalLayer.h" />
     <ClInclude Include="GPU\ConvolutionalNeuralNetwork.h" />
     <ClInclude Include="GPU\GpuBuffer.cuh" />
-    <ClInclude Include="GPU\Normalizations.cuh" />
+    <ClInclude Include="GPU\Tasks.cuh" />
     <ClInclude Include="ImageBatch.h" />
     <ClInclude Include="Types.h" />
     <ClInclude Include="Utils\CvUtils.h" />

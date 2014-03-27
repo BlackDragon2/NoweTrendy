@@ -15,9 +15,12 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+
 #include "ImageBatch.h"
-#include "GPU/Normalizations.cuh"
+
+#include "GPU/Tasks.cuh"
 #include "GPU/GpuBuffer.cuh"
+
 #include "Types.h"
 #include "Utils/FoldsFactory.h"
 
@@ -52,22 +55,24 @@ int main()
 
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s1));
 
-		/*cnn::gpu::GpuBuffer devbuffer(b->getBatchByteSize());
+		std::vector<std::pair<uchar, uchar>> res = b->findImagesMinMaxColors();
+
+		cnn::gpu::GpuBuffer devbuffer(b->getBatchByteSize());
 
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s12));
 		
-		devbuffer.writeToDevice(b->getImagesDataPtr(), b->getBatchByteSize());
+		devbuffer.writeToDevice(b->getBatchDataPtr(), b->getBatchByteSize());
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 		
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s2));
 		
-		cnn::gpu::Normalizations::centerize<uint>(b, devbuffer);
+		cnn::gpu::Tasks::centerize<uchar>(b, devbuffer);
 		
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 		
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e1));
 		
-		devbuffer.loadFromDevice(b->getImagesDataPtr(), b->getBatchByteSize());
+		devbuffer.loadFromDevice(b->getBatchDataPtr(), b->getBatchByteSize());
 
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e2));
 		
@@ -75,7 +80,7 @@ int main()
 		std::cout << "send:           " << double(s2 - s12) * spc << std::endl;
 		std::cout << "comp:           " << double(e1 - s2) * spc << std::endl;
 		std::cout << "recv & dealloc: " << double(e2 - e1) * spc << std::endl;
-		std::cout << "all:            " << double(e2 - s1) * spc << std::endl;*/
+		std::cout << "all:            " << double(e2 - s1) * spc << std::endl;
 
 		cv::imshow("some name24", b->retriveImageAsMat(19));
 	}
