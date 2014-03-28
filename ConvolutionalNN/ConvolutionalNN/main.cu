@@ -34,15 +34,15 @@ int main()
 	std::shared_ptr<std::vector<size_t>> folds3 = cnn::utils::FoldsFactory::prepareFoldVector(117, 7, cnn::utils::FoldsFactory::FitTactic::EXTEND_WITH_COPIES);
 
 	std::vector<std::string> files;
-	//for(size_t a=0UL; a<10UL; ++a){
+	for(size_t a=0UL; a<10UL; ++a){
 		for(size_t i=1UL; i<=20; ++i){
 			std::stringstream path;
 			path << "data/phughe/phughe." << i << ".jpg";
 			files.push_back(path.str());
 		}
-	//}
+	}
 
-	__int64 freq, s1, s12, s2, e1, e2;
+	__int64 freq, s1, s12, s2, e1, e2, pre1;
 	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
 	double spc = 1.0 / freq;
 
@@ -52,12 +52,15 @@ int main()
 		cv::namedWindow("some name24", CV_WINDOW_AUTOSIZE);
 
 		cv::imshow("some name23", b->retriveImageAsMat(19));
+		
+		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&pre1));
+		std::vector<std::pair<uchar, uchar> > res = b->findImagesColorsBoundaries();
 
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s1));
 
-		std::vector<std::pair<uchar, uchar>> res = b->findImagesMinMaxColors();
-
 		cnn::gpu::GpuBuffer devbuffer(b->getBatchByteSize());
+		cnn::gpu::GpuBuffer devbuffersingle(b->getAlignmentImageByteSize());
+		cnn::gpu::GpuBuffer devbuffer2(b->getBatchByteSize());
 
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s12));
 		
@@ -66,23 +69,24 @@ int main()
 		
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s2));
 		
-		cnn::gpu::Tasks::centerize<uchar>(b, devbuffer);
-		
-		assert(cudaDeviceSynchronize() == cudaSuccess);
+		cnn::gpu::Tasks::buildCenterMap<uchar>(*b, devbuffer, devbuffersingle);
+		cnn::gpu::Tasks::centerizeWithMap<uchar>(*b, devbuffer, devbuffersingle, devbuffer2);
 		
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e1));
+		assert(cudaDeviceSynchronize() == cudaSuccess);
 		
-		devbuffer.loadFromDevice(b->getBatchDataPtr(), b->getBatchByteSize());
+		devbuffer2.loadFromDevice(b->getBatchDataPtr(), b->getBatchByteSize());
 
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e2));
 		
+		std::cout << "find            "	<< double(s1 - pre1) * spc << std::endl;
 		std::cout << "allocation:     " << double(s12 - s1) * spc << std::endl;
 		std::cout << "send:           " << double(s2 - s12) * spc << std::endl;
 		std::cout << "comp:           " << double(e1 - s2) * spc << std::endl;
 		std::cout << "recv & dealloc: " << double(e2 - e1) * spc << std::endl;
-		std::cout << "all:            " << double(e2 - s1) * spc << std::endl;
+		std::cout << "all:            " << double(e2 - pre1) * spc << std::endl;
 
-		cv::imshow("some name24", b->retriveImageAsMat(19));
+		cv::imshow("some name24", b->retriveImageAsMat(18));
 	}
 	cv::waitKey(0);
 

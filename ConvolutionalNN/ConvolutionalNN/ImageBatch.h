@@ -44,10 +44,15 @@ public:
 	void	copyFromBatchToMat(cv::Mat& pImage, size_t pFromIndex)	const;
 	cv::Mat retriveImageAsMat(size_t pImageIndex)					const;
 
-	std::vector<std::pair<T, T>> findImageMinMaxColors(size_t pImageIndex)	const;
-	std::vector<std::pair<T, T>> findImagesMinMaxColors()					const;
+	std::vector<std::pair<T, T>> 
+		findImageColorsBoundaries(size_t pImageIndex) const;
+	
+	std::vector<std::pair<T, T>> 
+		findImagesColorsBoundaries() const;
+	
+	std::shared_ptr<std::vector<std::vector<std::pair<T, T> > > > 
+		findImagesColorsBoundariesSeparate() const;
 
-	//std::shared_ptr<ImageBatch>
 
 
 	size_t getImageWidth()	const;
@@ -130,7 +135,7 @@ ImageBatch<T>::ImageBatch(
 	size_t		pImageWidth,
 	size_t		pImageHeight,
 	size_t		pImageChannels,
-	size_t		pImageRowByteAlignment = 32UL)
+	size_t		pImageRowByteAlignment)
 :
 	mImageWidth(pImageWidth),
 	mImageHeight(pImageHeight),
@@ -161,9 +166,6 @@ void ImageBatch<T>::validateImage(cv::Mat const& pImage) const {
 	
 template <typename T>
 void ImageBatch<T>::allocateSpaceForImages(size_t pCount){
-	size_t newSize = (mImagesCount + pCount);
-	size_t alg = getAlignmentImageByteSize();
-	size_t t = sizeof(T);
 	mData->resize((mImagesCount + pCount) * getAlignmentImageByteSize() / sizeof(T));
 }
 
@@ -202,7 +204,7 @@ cv::Mat ImageBatch<T>::retriveImageAsMat(size_t pImageIndex) const {
 
 
 template <typename T>
-std::vector<std::pair<T, T>> ImageBatch<T>::findImageMinMaxColors(size_t pImageIndex) const {
+std::vector<std::pair<T, T>> ImageBatch<T>::findImageColorsBoundaries(size_t pImageIndex) const {
 	T min = std::numeric_limits<T>::min();
 	T max = std::numeric_limits<T>::max();
 	std::vector<std::pair<T, T>> res(mImageChannels, std::pair<T, T>(max, min));
@@ -223,12 +225,12 @@ std::vector<std::pair<T, T>> ImageBatch<T>::findImageMinMaxColors(size_t pImageI
 
 
 template <typename T>
-std::vector<std::pair<T, T>> ImageBatch<T>::findImagesMinMaxColors() const {
+std::vector<std::pair<T, T>> ImageBatch<T>::findImagesColorsBoundaries() const {
 	T min = std::numeric_limits<T>::min();
 	T max = std::numeric_limits<T>::max();
 	std::vector<std::pair<T, T>> res(mImageChannels, std::pair<T, T>(max, min));
 	for(size_t i=0UL; i<mImagesCount; ++i){
-		std::vector<std::pair<T, T>> tmp = findImageMinMaxColors(i);
+		std::vector<std::pair<T, T>> tmp = findImageColorsBoundaries(i);
 		for(size_t v=0UL; v<mImageChannels; ++v){
 			min = tmp[v].first;
 			max = tmp[v].second;
@@ -238,6 +240,21 @@ std::vector<std::pair<T, T>> ImageBatch<T>::findImagesMinMaxColors() const {
 				res[v].second = max;
 		}
 	}
+	return res;
+}
+
+
+template <typename T>
+std::shared_ptr<std::vector<std::vector<std::pair<T, T> > > > 
+	ImageBatch<T>::findImagesColorsBoundariesSeparate() const 
+{
+	std::shared_ptr<std::vector<std::vector<std::pair<T, T> > > > res(
+		new std::vector<std::vector<std::pair<T, T> > >());
+	res->reserve(mImagesCount);
+
+	for(size_t i=0UL; i<mImagesCount; ++i)
+		res->push_back(findImageColorsBoundaries(i));
+
 	return res;
 }
 
