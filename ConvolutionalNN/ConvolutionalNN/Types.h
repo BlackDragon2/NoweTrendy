@@ -2,9 +2,9 @@
 #ifndef CNN_TYPES_H_
 #define CNN_TYPES_H_
 
-
 typedef unsigned char		uchar;
-typedef unsigned int		uint;
+typedef unsigned int		uint32;
+typedef unsigned __int64	uint64;
 
 template <typename T>
 struct Square {

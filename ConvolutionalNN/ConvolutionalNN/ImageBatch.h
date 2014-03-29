@@ -36,7 +36,7 @@ public:
 
 	void validateImage(cv::Mat const& pImage) const;
 
-	void allocateSpaceForImages(size_t pCount);
+	void allocateSpaceForImages(size_t pCount, bool pUpdateImageCounter = false);
 	
 	void copyMatToBatch(cv::Mat const& pImage, size_t pUnderIndex);
 	void addImage(cv::Mat const& pImage);
@@ -54,24 +54,26 @@ public:
 		findImagesColorsBoundariesSeparate() const;
 
 
-
-	size_t getImageWidth()	const;
-	size_t getImageHeight() const;
+	size_t getImageWidth()			const;
+	size_t getAlignedImageWidth()	const;
+	size_t getImageHeight()			const;
 
 	bool isGray()	const;
 	bool isColor()	const;
 
-	int	getImageChannelsCount() const;
+	size_t getImageChannelsCount() const;
 
-	size_t getImageRowByteSize()			const;
-	size_t getAlignmentImageRowByteSize()	const;
-	size_t getImageByteSize()				const;
-	size_t getAlignmentImageByteSize()		const;
+	size_t getImageRowByteAligment() const;
+
+	size_t getImageRowByteSize()		const;
+	size_t getAlignedImageRowByteSize()	const;
+	size_t getImageByteSize()			const;
+	size_t getAlignedImageByteSize()	const;
 	
 	size_t getBatchByteCapacity()	const;
 	size_t getBatchByteSize()		const;
-	size_t getBatchImagesCapacity()	const;
-	size_t getImagesCount()	const;
+	size_t getImagesCapacity()		const;
+	size_t getImagesCount()			const;
 
 	T*			getBatchDataPtr();
 	T const*	getBatchDataPtr() const;
@@ -165,8 +167,10 @@ void ImageBatch<T>::validateImage(cv::Mat const& pImage) const {
 
 	
 template <typename T>
-void ImageBatch<T>::allocateSpaceForImages(size_t pCount){
-	mData->resize((mImagesCount + pCount) * getAlignmentImageByteSize() / sizeof(T));
+void ImageBatch<T>::allocateSpaceForImages(size_t pCount, bool pUpdateImageCounter){
+	mData->resize((mImagesCount + pCount) * getAlignedImageByteSize() / sizeof(T));
+	if(pUpdateImageCounter)
+		mImagesCount += pCount;
 }
 
 
@@ -180,7 +184,7 @@ void ImageBatch<T>::copyMatToBatch(cv::Mat const& pImage, size_t pUnderIndex){
 
 template <typename T>
 void ImageBatch<T>::addImage(cv::Mat const& pImage){
-	if(getBatchImagesCapacity() == getImagesCount())
+	if(getImagesCapacity() == getImagesCount())
 		allocateSpaceForImages(static_cast<size_t>(std::sqrt(getImagesCount())) + 1UL);
 	++mImagesCount;
 	copyMatToBatch(pImage, mImagesCount - 1UL);
@@ -266,6 +270,12 @@ size_t ImageBatch<T>::ImageBatch::getImageWidth() const {
 
 
 template <typename T>
+size_t ImageBatch<T>::ImageBatch::getAlignedImageWidth() const {
+	return utils::align(mImageWidth * mImageChannels, mImageRowByteAlignment);
+}
+
+
+template <typename T>
 size_t ImageBatch<T>::ImageBatch::getImageHeight() const {
 	return mImageHeight;
 }
@@ -284,8 +294,14 @@ bool ImageBatch<T>::isColor() const {
 
 
 template <typename T>
-int ImageBatch<T>::ImageBatch::getImageChannelsCount() const {
+size_t ImageBatch<T>::getImageChannelsCount() const {
 	return mImageChannels;
+}
+
+
+template <typename T>
+size_t ImageBatch<T>::getImageRowByteAligment() const {
+	return mImageRowByteAlignment;
 }
 
 
@@ -296,7 +312,7 @@ size_t ImageBatch<T>::getImageRowByteSize() const {
 
 
 template <typename T>
-size_t ImageBatch<T>::getAlignmentImageRowByteSize() const {
+size_t ImageBatch<T>::getAlignedImageRowByteSize() const {
 	return utils::align(getImageRowByteSize(), mImageRowByteAlignment);
 }
 
@@ -308,8 +324,8 @@ size_t ImageBatch<T>::getImageByteSize() const {
 
 
 template <typename T>
-size_t ImageBatch<T>::getAlignmentImageByteSize() const {
-	return getAlignmentImageRowByteSize() * mImageHeight;
+size_t ImageBatch<T>::getAlignedImageByteSize() const {
+	return getAlignedImageRowByteSize() * mImageHeight;
 }
 
 
@@ -321,13 +337,13 @@ size_t ImageBatch<T>::getBatchByteCapacity() const {
 
 template <typename T>
 size_t ImageBatch<T>::getBatchByteSize() const {
-	return getAlignmentImageByteSize() * mImagesCount;
+	return getAlignedImageByteSize() * mImagesCount;
 }
 
 
 template <typename T>
-size_t ImageBatch<T>::getBatchImagesCapacity() const {
-	return getBatchByteCapacity() / getAlignmentImageByteSize();
+size_t ImageBatch<T>::getImagesCapacity() const {
+	return getBatchByteCapacity() / getAlignedImageByteSize();
 }
 
 
@@ -351,29 +367,29 @@ T const* ImageBatch<T>::getBatchDataPtr() const {
 
 template <typename T>
 T* ImageBatch<T>::getImageDataPtr(size_t pIndex){
-	assert(pIndex < mImagesCount);
-	return getBatchDataPtr() + pIndex * getAlignmentImageByteSize();
+	assert(pIndex < getImagesCount());
+	return getBatchDataPtr() + pIndex * getAlignedImageByteSize();
 }
 
 
 template <typename T>
 T const* ImageBatch<T>::getImageDataPtr(size_t pIndex) const {
-	assert(pIndex < mImagesCount);
-	return getBatchDataPtr() + pIndex * getAlignmentImageByteSize();
+	assert(pIndex < getImagesCount());
+	return getBatchDataPtr() + pIndex * getAlignedImageByteSize();
 }
 	
 
 template <typename T>
 T* ImageBatch<T>::getImageRowDataPtr(size_t pIndex, size_t pRow){
 	assert(pRow < mImageHeight);
-	return getImageDataPtr(pIndex) + pRow * getAlignmentImageRowByteSize();
+	return getImageDataPtr(pIndex) + pRow * getAlignedImageRowByteSize();
 }
 	
 
 template <typename T>
 T const* ImageBatch<T>::getImageRowDataPtr(size_t pIndex, size_t pRow) const {
 	assert(pRow < mImageHeight);
-	return getImageDataPtr(pIndex) + pRow * getAlignmentImageRowByteSize();
+	return getImageDataPtr(pIndex) + pRow * getAlignedImageRowByteSize();
 }
 
 

@@ -27,7 +27,7 @@
 
 int main()
 {
-	srand((uint)time(0));
+	srand((uint32)time(0));
 
 	std::shared_ptr<std::vector<size_t>> folds = cnn::utils::FoldsFactory::prepareFoldVector(117, 7, cnn::utils::FoldsFactory::FitTactic::DEFAULT);
 	std::shared_ptr<std::vector<size_t>> folds2 = cnn::utils::FoldsFactory::prepareFoldVector(117, 7, cnn::utils::FoldsFactory::FitTactic::CUT);
@@ -47,11 +47,16 @@ int main()
 	double spc = 1.0 / freq;
 
 	std::shared_ptr<cnn::ImageBatch<uchar>> b = cnn::ImageBatch<uchar>::fromFiles(files);
-	{
-		cv::namedWindow("some name23", CV_WINDOW_AUTOSIZE);
-		cv::namedWindow("some name24", CV_WINDOW_AUTOSIZE);
 
-		cv::imshow("some name23", b->retriveImageAsMat(19));
+	cnn::ImageBatch<uchar> center(b->getImageWidth(), b->getImageHeight(), b->getImageChannelsCount());
+	center.allocateSpaceForImages(1, true);
+	
+	cnn::ImageBatch<uchar> centerized(b->getImageWidth(), b->getImageHeight(), b->getImageChannelsCount());
+	centerized.allocateSpaceForImages(b->getImagesCount(), true);
+	
+	cnn::ImageBatch<uchar> eroded(b->getImageWidth(), b->getImageHeight(), b->getImageChannelsCount());
+	eroded.allocateSpaceForImages(b->getImagesCount(), true);
+	{
 		
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&pre1));
 		std::vector<std::pair<uchar, uchar> > res = b->findImagesColorsBoundaries();
@@ -59,9 +64,12 @@ int main()
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s1));
 
 		cnn::gpu::GpuBuffer devbuffer(b->getBatchByteSize());
-		cnn::gpu::GpuBuffer devbuffersingle(b->getAlignmentImageByteSize());
+		cnn::gpu::GpuBuffer devbuffersingle(b->getAlignedImageByteSize());
 		cnn::gpu::GpuBuffer devbuffer2(b->getBatchByteSize());
+		cnn::gpu::GpuBuffer devbound(b->getImagesCount() * b->getImageChannelsCount() * 2);
+		cnn::gpu::GpuBuffer devbuffer3(b->getBatchByteSize());
 
+		assert(cudaDeviceSynchronize() == cudaSuccess);
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s12));
 		
 		devbuffer.writeToDevice(b->getBatchDataPtr(), b->getBatchByteSize());
@@ -71,13 +79,19 @@ int main()
 		
 		cnn::gpu::Tasks::buildCenterMap<uchar>(*b, devbuffer, devbuffersingle);
 		cnn::gpu::Tasks::centerizeWithMap<uchar>(*b, devbuffer, devbuffersingle, devbuffer2);
+		cnn::gpu::Tasks::findEachImageBoundaries<uchar>(*b, devbuffer2, devbound);
+		cnn::gpu::Tasks::erodeEachImageUsingBoundaries<uchar>(*b, devbuffer2, devbound, devbuffer3, 255);
 		
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e1));
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 		
-		devbuffer2.loadFromDevice(b->getBatchDataPtr(), b->getBatchByteSize());
+		devbuffersingle.loadFromDevice(center.getBatchDataPtr(), center.getAlignedImageByteSize());
+
+		devbuffer2.loadFromDevice(centerized.getBatchDataPtr(), b->getBatchByteSize());
+		devbuffer3.loadFromDevice(eroded.getBatchDataPtr(), b->getBatchByteSize());
 
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e2));
+		assert(cudaDeviceSynchronize() == cudaSuccess);
 		
 		std::cout << "find            "	<< double(s1 - pre1) * spc << std::endl;
 		std::cout << "allocation:     " << double(s12 - s1) * spc << std::endl;
@@ -85,8 +99,16 @@ int main()
 		std::cout << "comp:           " << double(e1 - s2) * spc << std::endl;
 		std::cout << "recv & dealloc: " << double(e2 - e1) * spc << std::endl;
 		std::cout << "all:            " << double(e2 - pre1) * spc << std::endl;
+		
+		cv::namedWindow("some name1", CV_WINDOW_AUTOSIZE);
+		cv::namedWindow("some name2", CV_WINDOW_AUTOSIZE);
+		cv::namedWindow("some name3", CV_WINDOW_AUTOSIZE);
+		cv::namedWindow("some name4", CV_WINDOW_AUTOSIZE);
 
-		cv::imshow("some name24", b->retriveImageAsMat(18));
+		cv::imshow("some name1", b->retriveImageAsMat(10));
+		cv::imshow("some name2", center.retriveImageAsMat(0));
+		cv::imshow("some name3", centerized.retriveImageAsMat(10));
+		cv::imshow("some name4", eroded.retriveImageAsMat(10));
 	}
 	cv::waitKey(0);
 
