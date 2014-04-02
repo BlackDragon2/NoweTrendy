@@ -18,7 +18,7 @@ class GpuBuffer {
 public:
 	GpuBuffer();
 	GpuBuffer(size_t pBytesCount, size_t pByteAlignment = 32UL);
-	template <typename T> GpuBuffer(size_t pBytesCount, T* pData, size_t pByteAlignment = 32UL);
+	template <typename T> GpuBuffer(size_t pBytesCount, T* pData, size_t pGpuBufferOffset = 0UL, size_t pByteAlignment = 32UL);
 	virtual ~GpuBuffer();
 
 
@@ -26,8 +26,8 @@ public:
 	void free();
 	void reallocate(size_t pBytesCount, size_t pByteAlignment = 32UL);
 
-	template <typename T> void writeToDevice(T* pData, size_t pBytesCount);
-	template <typename T> void loadFromDevice(T* pData, size_t pBytesCount);
+	template <typename T> void writeToDevice(T* pData, size_t pBytesCount, size_t pGpuBufferOffset = 0UL);
+	template <typename T> void loadFromDevice(T* pData, size_t pBytesCount, size_t pGpuBufferOffset = 0UL);
 
 
 	template <typename T> T*		getDataPtr();
@@ -53,29 +53,29 @@ private:
 
 
 template <typename T> 
-GpuBuffer::GpuBuffer(size_t pBytesCount, T* pData, size_t pByteAlignment)
+GpuBuffer::GpuBuffer(size_t pBytesCount, T* pData, size_t pGpuBufferOffset, size_t pByteAlignment)
 :
 	mAddress(nullptr),
 	mByteSize(0UL),
 	mByteAlignment(0UL)
 {
 	allocate(pBytesCount, pByteAlignment);
-	writeToDevice(pData, pBytesCount);
+	writeToDevice(pData, pBytesCount, pGpuBufferOffset);
 }
 
 
 template <typename T>
-void GpuBuffer::writeToDevice(T* pData, size_t pBytesCount){
+void GpuBuffer::writeToDevice(T* pData, size_t pBytesCount, size_t pGpuBufferOffset){
 	assert(pBytesCount <= mByteSize);
-	cudaError_t result = cudaMemcpy(mAddress, pData, pBytesCount, cudaMemcpyHostToDevice);
+	cudaError_t result = cudaMemcpy(mAddress + pGpuBufferOffset, pData, pBytesCount, cudaMemcpyHostToDevice);
 	assert(result == cudaSuccess);
 }
 	
 
 template <typename T>
-void GpuBuffer::loadFromDevice(T* pData, size_t pBytesCount){
+void GpuBuffer::loadFromDevice(T* pData, size_t pBytesCount, size_t pGpuBufferOffset){
 	assert(pBytesCount <= mByteSize);
-	cudaError_t result = cudaMemcpy(pData, mAddress, pBytesCount, cudaMemcpyDeviceToHost);
+	cudaError_t result = cudaMemcpy(pData, mAddress + pGpuBufferOffset, pBytesCount, cudaMemcpyDeviceToHost);
 	assert(result == cudaSuccess);
 }
 

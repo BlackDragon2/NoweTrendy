@@ -10,17 +10,52 @@
 #include "../ImageBatch.h"
 
 
+
+/////////// type conversion
+template <typename F, typename T>
+__global__ void convertK(
+	F*		pImagesInput,
+	T*		pImagesOutput,
+	size_t	pElements)
+{
+	uint32 idx = ((blockIdx.x * blockDim.x) + threadIdx.x);
+	if(idx >= pElements)
+		return;
+
+	*(pImagesOutput + idx) = static_cast<T>(*(pImagesInput + idx));
+}
+
+
 ////////// build center map
+template <typename T>
 __global__ void buildCenterMapK(
-	uchar*	pImagesInput, 
-	uchar*	pCenterMap, 
-	size_t	pAlignedImageByteSize, 
+	T*		pImagesInput, 
+	T*		pCenterMap, 
+	size_t	pAlignedImageUnitSize, 
 	size_t	pImageCount)
 {
-	uint32	idx = ((blockIdx.x * blockDim.x) + threadIdx.x);
-	size_t	alignImage4xSize = pAlignedImageByteSize >> 2;
+	uint32 idx = ((blockIdx.x * blockDim.x) + threadIdx.x);
+	if(idx >= pAlignedImageUnitSize)
+		return;
 
-	if(idx >= alignImage4xSize)
+	float sum = 0UL;
+	for(size_t i=0UL; i<pImageCount; ++i)
+		sum += (*(pImagesInput + pAlignedImageUnitSize * i + idx));
+
+	*(pCenterMap + idx) = sum / pImageCount;
+}
+
+
+template <>
+__global__ void buildCenterMapK<uchar>(
+	uchar*	pImagesInput, 
+	uchar*	pCenterMap, 
+	size_t	pAlignedImageUnitSize, 
+	size_t	pImageCount)
+{
+	uint32 idx				= ((blockIdx.x * blockDim.x) + threadIdx.x);
+	uint32 packagesCount	= pAlignedImageUnitSize >> 2;
+	if(idx >= packagesCount)
 		return;
 
 	size_t sum0 = 0UL;
@@ -32,7 +67,7 @@ __global__ void buildCenterMapK(
 	uint32* cntm = reinterpret_cast<uint32*>(pCenterMap);
 
 	for(size_t i=0UL; i<pImageCount; ++i){
-		uint32 val = *(imgs + alignImage4xSize * i + idx);
+		uint32 val = *(imgs + packagesCount * i + idx);
 		sum0 += (val & 0x000000FF);
 		sum1 += (val & 0x0000FF00) >> 8;
 		sum2 += (val & 0x00FF0000) >> 16;
@@ -47,79 +82,58 @@ __global__ void buildCenterMapK(
 }
 
 
-__global__ void buildCenterMapK(
-	float*	pImagesInput, 
-	float*	pCenterMap, 
-	size_t	pAlignedImageByteSize, 
+//////////// centerize with map
+template <typename T>
+__global__ void centerizeWithMapK(
+	T*		pImagesInput, 
+	T*		pCenterMap,
+	T*		pImagesOutput,
+	size_t	pAlignedImageUnitSize, 
 	size_t	pImageCount)
 {
-	uint32 idx				= ((blockIdx.x * blockDim.x) + threadIdx.x);
-	size_t alignImage4xSize	= pAlignedImageByteSize >> 2;
-
-	if(idx >= alignImage4xSize)
+	uint32 idx = ((blockIdx.x * blockDim.x) + threadIdx.x);
+	if(idx >= pAlignedImageUnitSize)
 		return;
 
-	float sum = 0UL;
-	for(size_t i=0UL; i<pImageCount; ++i)
-		sum += (*(pImagesInput + alignImage4xSize * i + idx));
-
-	*(pCenterMap + idx) = sum / pImageCount;
+	for(size_t i=0UL; i<pImageCount; ++i){
+		float val	= *(pImagesInput + pAlignedImageUnitSize * i + idx);
+		float mean	= *(pCenterMap + pAlignedImageUnitSize * i + idx);
+		*(pImagesOutput + pAlignedImageUnitSize * i + idx) = MAX(0.0F, val - mean);
+	}
 }
 
 
-//////////// centerize with map
-__global__ void centerizeWithMapK(
+template <>
+__global__ void centerizeWithMapK<uchar>(
 	uchar*	pImagesInput, 
 	uchar*	pCenterMap,
 	uchar*	pImagesOutput,
-	size_t	pAlignedImageByteSize, 
+	size_t	pAlignedImageUnitSize,
 	size_t	pImageCount)
 {
-	uint32	idx					= ((blockIdx.x * blockDim.x) + threadIdx.x);
-	size_t	alignImage4xSize	= pAlignedImageByteSize >> 2;
-
-	if(idx >= alignImage4xSize)
+	uint32 idx				= ((blockIdx.x * blockDim.x) + threadIdx.x);
+	uint32 packagesCount	= pAlignedImageUnitSize >> 2;
+	if(idx >= packagesCount)
 		return;
 
 	uint32* imgs = reinterpret_cast<uint32*>(pImagesInput);
 	uint32* cntm = reinterpret_cast<uint32*>(pCenterMap);
 	uint32* oupt = reinterpret_cast<uint32*>(pImagesOutput);
 	
-	size_t means = *(cntm + idx);
+	uint32 means = *(cntm + idx);
 	uint32 mean0 = means & 0x000000FF;
 	uint32 mean1 = means & 0x0000FF00;
 	uint32 mean2 = means & 0x00FF0000;
 	uint32 mean3 = means & 0xFF000000;
 	
 	for(size_t i=0UL; i<pImageCount; ++i){
-		uint32*	adr = imgs + alignImage4xSize * i + idx;
+		uint32*	adr = imgs + packagesCount * i + idx;
 		uint32	val = *adr;
 		val -= MIN(mean0, val & 0x000000FF);
 		val -= MIN(mean1, val & 0x0000FF00);
 		val -= MIN(mean2, val & 0x00FF0000);
 		val -= MIN(mean3, val & 0xFF000000);
-		*(oupt + alignImage4xSize * i + idx) = val;
-	}
-}
-
-
-__global__ void centerizeWithMapK(
-	float* pImagesInput, 
-	float* pCenterMap,
-	float* pImagesOutput,
-	size_t	pAlignedImageByteSize, 
-	size_t	pImageCount)
-{
-	uint32 idx				= ((blockIdx.x * blockDim.x) + threadIdx.x);
-	size_t alignImage4xSize	= pAlignedImageByteSize >> 2;
-
-	if(idx >= alignImage4xSize)
-		return;
-
-	for(size_t i=0UL; i<pImageCount; ++i){
-		float val	= *(pImagesInput + alignImage4xSize * i + idx);
-		float mean	= *(pCenterMap + alignImage4xSize * i + idx);
-		*(pImagesOutput + alignImage4xSize * i + idx) = MAX(0.0F, val - mean);
+		*(oupt + packagesCount * i + idx) = val;
 	}
 }
 
@@ -127,74 +141,79 @@ __global__ void centerizeWithMapK(
 //////////////// finding images boundaries
 // output size is:	imgs_count * imgs_channels * 2
 // structure is:	[c1_min, c1_max, c2_min, c2_max, ...]
+template <typename T>
 __global__ void findEachImageBoundariesK(
-	uchar*	pImagesInput, 
-	uchar*	pBoundariesOutput,
-	size_t	pAlignedImageByteSize, 
-	size_t	pAlignedImageRowByteSize, 
+	T*		pImagesInput, 
+	T*		pBoundariesOutput,
+	size_t	pAlignedImageUnitSize, 
+	size_t	pAlignedImageRowUnitSize, 
 	size_t	pImageWidth,
 	size_t	pImageHeight,
 	size_t	pImageChannels,
-	size_t	pImageCount)
+	size_t	pImageCount,
+	T		pMinValue = std::numeric_limits<T>::min(),
+	T		pMaxValue = std::numeric_limits<T>::max())
 {
 	uint32 idx		= ((blockIdx.x * blockDim.x) + threadIdx.x);
 	uint32 threads	= pImageCount * pImageChannels;
 	if(idx >= threads)
 		return;
 	
-	uint32 myImage		= idx / pImageChannels;
-	uint32 myChannel	= idx % pImageChannels;
-	uchar* myimg		= pImagesInput + myImage * pAlignedImageByteSize;
+	uint32	myImage		= idx / pImageChannels;
+	uint32	myChannel	= idx % pImageChannels;
+	T*		myimg		= pImagesInput + myImage * pAlignedImageUnitSize;
 
-	uchar min			= 255;
-	uchar max			= 0;
-	size_t rowLength	= pImageWidth * pImageChannels;
+	T		min			= pMaxValue;
+	T		max			= pMinValue;
+	size_t	rowLength	= pImageWidth * pImageChannels;
 
 	for(size_t i=0UL; i<pImageHeight; ++i){
 		for(size_t re=myChannel; re<rowLength; re+=pImageChannels){
-			uchar value = *(myimg + i * pAlignedImageRowByteSize + re);
-			min = MIN(min, value);
-			max = MAX(max, value);
+			T value = *(myimg + i * pAlignedImageRowUnitSize + re);
+			if(min > value)
+				min = value;
+			if(max < value)
+				max = value;
 		}
 	}
 
 	// TODO change from uchar to short?
-	uchar* cntm	= pBoundariesOutput + myImage * (pImageChannels << 1) + (myChannel << 1);
+	T* cntm	= pBoundariesOutput + myImage * ((pImageChannels + myChannel) << 1);
 	(*(cntm)	) = min;
 	(*(cntm + 1)) = max;
 }
 
 
 //////////////// erode per column, per channel, why not
+template <typename T>
 __global__ void erodeEachImageUsingBoundariesK(
-	uchar*	pImagesInput, 
-	uchar*	pImageBoundaries,
-	uchar*	pImagesOutput,
-	size_t	pImageRowAlignmentByteSize, 
-	size_t	pImageAlignedByteSize,
+	T*		pImagesInput, 
+	T*		pImageBoundaries,
+	T*		pImagesOutput,
+	size_t	pImageRowAlignmentUnitSize, 
+	size_t	pImageAlignedUnitSize,
 	size_t	pImageHeight, 
 	size_t	pImageCount,
 	size_t	pImageChannels,
-	uchar	pMultiplier)
+	T		pMultiplier)
 {
 	uint32 idx			= ((blockIdx.x * blockDim.x) + threadIdx.x);
-	uint32 colsCount	= pImageCount * pImageRowAlignmentByteSize;
-
+	uint32 colsCount	= pImageCount * pImageRowAlignmentUnitSize;
 	if(idx >= colsCount)
 		return;
 
-	uint32 myImage		= idx / pImageRowAlignmentByteSize;
-	uint32 myCol		= idx % pImageRowAlignmentByteSize;
+	uint32 myImage		= idx / pImageRowAlignmentUnitSize;
+	uint32 myCol		= idx % pImageRowAlignmentUnitSize;
 	uint32 myChannel	= idx % pImageChannels;
 
-	uchar min	= *(pImageBoundaries + myImage * pImageChannels + myChannel * 2);
-	uchar max	= *(pImageBoundaries + myImage * pImageChannels + myChannel * 2 + 1);
-	uchar diff	= max - min;
+	T min	= *(pImageBoundaries + myImage * ((pImageChannels + myChannel) << 1));
+	T max	= *(pImageBoundaries + myImage * ((pImageChannels + myChannel) << 1) + 1);
+	T diff	= max - min;// > 0 ? max - min : 1;
 
 	for(size_t i=0UL; i<pImageHeight; ++i){
-		uchar val = *(pImagesInput + myImage * pImageAlignedByteSize + i * pImageRowAlignmentByteSize + myCol);
-		uchar res = static_cast<uchar>((static_cast<float>(val - min) / diff) * pMultiplier);
-		*(pImagesOutput + myImage * pImageAlignedByteSize + i * pImageRowAlignmentByteSize + myCol) = res;
+		T val = *(pImagesInput + myImage * pImageAlignedUnitSize + i * pImageRowAlignmentUnitSize + myCol);
+		T res = static_cast<T>((static_cast<float>(val - min) / diff) * pMultiplier);
+		*(pImagesOutput + myImage * pImageAlignedUnitSize + i * pImageRowAlignmentUnitSize + myCol) = res;
 	}
 }
 
@@ -208,6 +227,11 @@ private:
 	static const size_t THREADS = 512UL;
 
 public:
+	template <typename F, typename T> static void convert(
+		ImageBatch<F> const&	pImageBatch, 
+		GpuBuffer&				pInputBuffer,
+		GpuBuffer&				pOutputBuffer);
+
 	template <typename T> static void buildCenterMap(
 		ImageBatch<T> const&	pImageBatch, 
 		GpuBuffer&				pInputBuffer,
@@ -233,6 +257,21 @@ public:
 };
 
 
+template <typename F, typename T> 
+void Tasks::convert(
+	ImageBatch<F> const&	pImageBatch, 
+	GpuBuffer&				pInputBuffer,
+	GpuBuffer&				pOutputBuffer)
+{
+	size_t elems = pImageBatch.getBatchByteSize() / sizeof(F);
+	size_t blocks = static_cast<size_t>(std::ceil(static_cast<double>(elems) / THREADS));
+	
+	convertK<F, T><<<blocks, THREADS>>>(
+		pInputBuffer.getDataPtr<F>(),
+		pOutputBuffer.getDataPtr<T>(),
+		elems);
+}
+
 
 template <typename T> 
 void Tasks::buildCenterMap(
@@ -240,13 +279,13 @@ void Tasks::buildCenterMap(
 	GpuBuffer&				pInputBuffer,
 	GpuBuffer&				pOutputBuffer)
 {
-	size_t blocks = static_cast<size_t>(std::ceil(
-		static_cast<double>(pImageBatch.getAlignedImageByteSize() >> 2) / THREADS));
+	size_t units	= pImageBatch.getAlignedImageByteSize() / sizeof(T);
+	size_t blocks	= static_cast<size_t>(std::ceil(static_cast<double>(units) / THREADS));
 	
-	buildCenterMapK<<<blocks, THREADS>>>(
+	buildCenterMapK<T><<<blocks, THREADS>>>(
 		pInputBuffer.getDataPtr<T>(),
 		pOutputBuffer.getDataPtr<T>(),
-		pImageBatch.getAlignedImageByteSize(),
+		units,
 		pImageBatch.getImagesCount());
 }
 
@@ -258,14 +297,14 @@ void Tasks::centerizeWithMap(
 	GpuBuffer&				pCenterMapBuffer,
 	GpuBuffer&				pOutputBuffer)
 {
-	size_t blocks = static_cast<size_t>(std::ceil(
-		static_cast<double>(pImageBatch.getAlignedImageByteSize() >> 2) / THREADS));
+	size_t units	= pImageBatch.getAlignedImageByteSize() / sizeof(T);
+	size_t blocks	= static_cast<size_t>(std::ceil(static_cast<double>(units) / THREADS));
 
-	centerizeWithMapK<<<blocks, THREADS>>>(
+	centerizeWithMapK<T><<<blocks, THREADS>>>(
 		pImagesBuffer.getDataPtr<T>(), 
 		pCenterMapBuffer.getDataPtr<T>(),
 		pOutputBuffer.getDataPtr<T>(),
-		pImageBatch.getAlignedImageByteSize(),
+		units,
 		pImageBatch.getImagesCount());
 }
 
@@ -279,11 +318,11 @@ void Tasks::findEachImageBoundaries(
 	size_t blocks = static_cast<size_t>(std::ceil(
 		static_cast<double>(pImageBatch.getImagesCount() * pImageBatch.getImageChannelsCount()) / THREADS));
 
-	findEachImageBoundariesK<<<blocks, THREADS>>>(
+	findEachImageBoundariesK<T><<<blocks, THREADS>>>(
 		pInputBuffer.getDataPtr<T>(),
 		pOutputBuffer.getDataPtr<T>(),
-		pImageBatch.getAlignedImageByteSize(),
-		pImageBatch.getAlignedImageRowByteSize(),
+		pImageBatch.getAlignedImageByteSize() / sizeof(T),
+		pImageBatch.getAlignedImageRowByteSize() / sizeof(T),
 		pImageBatch.getImageWidth(),
 		pImageBatch.getImageHeight(),
 		pImageBatch.getImageChannelsCount(),
@@ -301,32 +340,20 @@ void Tasks::erodeEachImageUsingBoundaries(
 {
 	size_t blocks = static_cast<size_t>(std::ceil(static_cast<double>(
 		pImageBatch.getImagesCount() * 
-		pImageBatch.getImageChannelsCount() * 
-		pImageBatch.getAlignedImageWidth()) / THREADS));
+		pImageBatch.getImageRowByteSize() / sizeof(T)) / THREADS));
 
-	erodeEachImageUsingBoundariesK<<<blocks, THREADS>>>(
+	erodeEachImageUsingBoundariesK<T><<<blocks, THREADS>>>(
 		pInputBuffer.getDataPtr<T>(),
 		pBoundaries.getDataPtr<T>(),
 		pOutputBuffer.getDataPtr<T>(),
-		pImageBatch.getAlignedImageRowByteSize(),
-		pImageBatch.getAlignedImageByteSize(),
+		pImageBatch.getAlignedImageRowByteSize() / sizeof(T),
+		pImageBatch.getAlignedImageByteSize() / sizeof(T),
 		pImageBatch.getImageHeight(),
 		pImageBatch.getImagesCount(),
 		pImageBatch.getImageChannelsCount(),
 		pMultiplier);
 }
 
-/*
-uchar*	pImagesInput, 
-uchar*	pImageBoundaries,
-uchar*	pImagesOutput,
-size_t	pImageRowAlignmentByteSize, 
-size_t	pImageAlignedByteSize,
-size_t	pImageHeight, 
-size_t	pImageCount,
-size_t	pImageChannels,
-uchar	pMultiplier
-*/
 
 	}
 }

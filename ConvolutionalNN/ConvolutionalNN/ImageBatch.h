@@ -54,9 +54,8 @@ public:
 		findImagesColorsBoundariesSeparate() const;
 
 
-	size_t getImageWidth()			const;
-	size_t getAlignedImageWidth()	const;
-	size_t getImageHeight()			const;
+	size_t getImageWidth()	const; 
+	size_t getImageHeight()	const;
 
 	bool isGray()	const;
 	bool isColor()	const;
@@ -266,12 +265,6 @@ std::shared_ptr<std::vector<std::vector<std::pair<T, T> > > >
 template <typename T>
 size_t ImageBatch<T>::ImageBatch::getImageWidth() const {
 	return mImageWidth;
-}
-
-
-template <typename T>
-size_t ImageBatch<T>::ImageBatch::getAlignedImageWidth() const {
-	return utils::align(mImageWidth * mImageChannels, mImageRowByteAlignment);
 }
 
 

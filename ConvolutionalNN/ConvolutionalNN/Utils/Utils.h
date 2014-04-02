@@ -11,6 +11,7 @@ namespace cnn {
 
 size_t align(size_t pValue, size_t pAlign);
 
+uint32 randU();
 uint32 bigRand32();
 uint64 bigRand64();
 
