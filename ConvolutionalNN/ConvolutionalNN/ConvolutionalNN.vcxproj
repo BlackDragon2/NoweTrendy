@@ -164,10 +164,14 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile Include="main.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GPU\ConvolutionalLayer.h" />
-    <ClInclude Include="GPU\ConvolutionalNeuralNetwork.h" />
+    <ClInclude Include="Config.h" />
+    <ClInclude Include="GPU\Normalizer.h" />
+    <ClInclude Include="GPU\AverageCenterizer.cuh" />
+    <ClInclude Include="GPU\Convolution.h" />
     <ClInclude Include="GPU\GpuBuffer.cuh" />
-    <ClInclude Include="GPU\Tasks.cuh" />
+    <ClInclude Include="GPU\Sharpener.cuh" />
+    <ClInclude Include="GPU\SignalConvolution.cuh" />
+    <ClInclude Include="GPU\Converter.cuh" />
     <ClInclude Include="ImageBatch.h" />
     <ClInclude Include="Types.h" />
     <ClInclude Include="Utils\CvUtils.h" />
@@ -178,6 +182,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClCompile Include="Utils\CvUtils.cpp" />
     <ClCompile Include="Utils\FoldsFactory.cpp" />
     <ClCompile Include="Utils\Utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GPU\VarianceCenterizer.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

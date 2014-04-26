@@ -33,19 +33,31 @@
     <ClInclude Include="Utils\FoldsFactory.h">
       <Filter>Headers\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="GPU\ConvolutionalLayer.h">
-      <Filter>Headers\GPU</Filter>
-    </ClInclude>
-    <ClInclude Include="GPU\ConvolutionalNeuralNetwork.h">
-      <Filter>Headers\GPU</Filter>
-    </ClInclude>
     <ClInclude Include="ImageBatch.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="Utils\CvUtils.h">
       <Filter>Headers\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="GPU\Tasks.cuh">
+    <ClInclude Include="GPU\Convolution.h">
+      <Filter>Headers\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\SignalConvolution.cuh">
+      <Filter>Headers\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Config.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\AverageCenterizer.cuh">
+      <Filter>Headers\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\Normalizer.h">
+      <Filter>Headers\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\Sharpener.cuh">
+      <Filter>Headers\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\Converter.cuh">
       <Filter>Headers\GPU</Filter>
     </ClInclude>
   </ItemGroup>
@@ -67,5 +79,10 @@
     <ClCompile Include="Utils\CvUtils.cpp">
       <Filter>Sources\Utils</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GPU\VarianceCenterizer.cuh">
+      <Filter>Headers\GPU</Filter>
+    </None>
   </ItemGroup>
 </Project>

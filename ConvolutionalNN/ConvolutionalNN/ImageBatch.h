@@ -23,6 +23,8 @@ public:
 		std::vector<std::string> const& pFiles,
 		bool							pLoadInColor			= true,
 		size_t							pImageRowByteAlignment	= 32UL);
+	
+	//static std::shared_ptr<ImageBatch<uchar>> toFiles(std::vector<std::string> const& pFiles);
 
 
 public:
@@ -43,16 +45,8 @@ public:
 
 	void	copyFromBatchToMat(cv::Mat& pImage, size_t pFromIndex)	const;
 	cv::Mat retriveImageAsMat(size_t pImageIndex)					const;
-
-	std::vector<std::pair<T, T>> 
-		findImageColorsBoundaries(size_t pImageIndex) const;
+	cv::Mat retriveAllImagesAsMat(size_t pImagesPerRow)				const;
 	
-	std::vector<std::pair<T, T>> 
-		findImagesColorsBoundaries() const;
-	
-	std::shared_ptr<std::vector<std::vector<std::pair<T, T> > > > 
-		findImagesColorsBoundariesSeparate() const;
-
 
 	size_t getImageWidth()	const; 
 	size_t getImageHeight()	const;
@@ -115,6 +109,7 @@ std::shared_ptr<ImageBatch<uchar>> ImageBatch<T>::fromFiles(
 	int readType	= pLoadInColor ? CV_LOAD_IMAGE_COLOR : CV_LOAD_IMAGE_GRAYSCALE;	
 	cv::Mat mat		= cv::imread(pFiles[0], readType);
 
+	assert(mat.data != nullptr);
 	std::shared_ptr<ImageBatch<uchar>> batch(new ImageBatch<uchar>(
 		mat.size().width, 
 		mat.size().height, 
@@ -176,8 +171,9 @@ void ImageBatch<T>::allocateSpaceForImages(size_t pCount, bool pUpdateImageCount
 template <typename T>
 void ImageBatch<T>::copyMatToBatch(cv::Mat const& pImage, size_t pUnderIndex){
 	validateImage(pImage);
+	size_t bytes = getImageRowByteSize();
 	for (size_t i=0UL; i<mImageHeight; ++i)
-		memcpy(getImageRowDataPtr(pUnderIndex, i), pImage.row(i).data, getImageRowByteSize()); 
+		memcpy(getImageRowDataPtr(pUnderIndex, i), pImage.row(i).data, bytes); 
 }
 
 
@@ -193,8 +189,10 @@ void ImageBatch<T>::addImage(cv::Mat const& pImage){
 template <typename T>
 void ImageBatch<T>::copyFromBatchToMat(cv::Mat& pImage, size_t pFromIndex) const {
 	validateImage(pImage);
-	for (size_t i=0UL; i<mImageHeight; ++i)
-		memcpy(pImage.row(i).data, getImageRowDataPtr(pFromIndex, i), getImageRowByteSize()); 
+	size_t bytes = getImageRowByteSize();
+	for (size_t i=0UL; i<mImageHeight; ++i){ 
+		memcpy(pImage.row(i).data, getImageRowDataPtr(pFromIndex, i), bytes); 
+	}
 }
 
 
@@ -207,58 +205,17 @@ cv::Mat ImageBatch<T>::retriveImageAsMat(size_t pImageIndex) const {
 
 
 template <typename T>
-std::vector<std::pair<T, T>> ImageBatch<T>::findImageColorsBoundaries(size_t pImageIndex) const {
-	T min = std::numeric_limits<T>::min();
-	T max = std::numeric_limits<T>::max();
-	std::vector<std::pair<T, T>> res(mImageChannels, std::pair<T, T>(max, min));
-	for(size_t r=0UL; r<mImageHeight; ++r){
-		const T* row = getImageRowDataPtr(pImageIndex, r);
-		for(size_t c=0UL; c<mImageWidth * mImageChannels; c+=mImageChannels){
-			for(size_t v=0UL; v<mImageChannels; ++v){
-				T value = *(row + c + v);
-				if(res[v].first > value)
-					res[v].first = value;
-				if(res[v].second < value)
-					res[v].second = value;
-			}
-		}
-	}
-	return res;
-}
-
-
-template <typename T>
-std::vector<std::pair<T, T>> ImageBatch<T>::findImagesColorsBoundaries() const {
-	T min = std::numeric_limits<T>::min();
-	T max = std::numeric_limits<T>::max();
-	std::vector<std::pair<T, T>> res(mImageChannels, std::pair<T, T>(max, min));
+cv::Mat ImageBatch<T>::retriveAllImagesAsMat(size_t pImagesPerRow) const {
+	size_t width	= mImageWidth * pImagesPerRow;
+	size_t height	= mImageHeight * static_cast<size_t>(std::ceil(
+		static_cast<float>(mImagesCount) / pImagesPerRow));
+	cv::Mat mtx(height, width, utils::createCvImageType<T>(mImageChannels));
 	for(size_t i=0UL; i<mImagesCount; ++i){
-		std::vector<std::pair<T, T>> tmp = findImageColorsBoundaries(i);
-		for(size_t v=0UL; v<mImageChannels; ++v){
-			min = tmp[v].first;
-			max = tmp[v].second;
-			if(res[v].first > min)
-				res[v].first = min;
-			if(res[v].second < max)
-				res[v].second = max;
-		}
+		cv::Rect roi((i % pImagesPerRow) * mImageWidth, (i / pImagesPerRow) * mImageHeight, mImageWidth, mImageHeight);
+		cv::Mat part = cv::Mat(mtx, roi);
+		copyFromBatchToMat(part, i);
 	}
-	return res;
-}
-
-
-template <typename T>
-std::shared_ptr<std::vector<std::vector<std::pair<T, T> > > > 
-	ImageBatch<T>::findImagesColorsBoundariesSeparate() const 
-{
-	std::shared_ptr<std::vector<std::vector<std::pair<T, T> > > > res(
-		new std::vector<std::vector<std::pair<T, T> > >());
-	res->reserve(mImagesCount);
-
-	for(size_t i=0UL; i<mImagesCount; ++i)
-		res->push_back(findImageColorsBoundaries(i));
-
-	return res;
+	return mtx;
 }
 
 

@@ -12,161 +12,250 @@
 #include <sstream>
 #include <time.h>
 
-#include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 
 #include "ImageBatch.h"
 
-#include "GPU/Tasks.cuh"
+#include "GPU/Converter.cuh"
 #include "GPU/GpuBuffer.cuh"
+#include "GPU/SignalConvolution.cuh"
+#include "GPU/VarianceCenterizer.cuh"
+#include "GPU/Sharpener.cuh"
 
 #include "Types.h"
 #include "Utils/FoldsFactory.h"
 
 
-#define MEASURE_SEPARATE
+//#define MEASURE_SEPARATE
 
 
+void doUchar(
+	std::shared_ptr<cnn::ImageBatch<uchar>>& pImages, 
+	std::shared_ptr<cnn::ImageBatch<uchar>>& pKernels);
+
+
+void doFloat(
+	std::shared_ptr<cnn::ImageBatch<uchar>>& b, 
+	std::shared_ptr<cnn::ImageBatch<uchar>>& filtersUchar);
 
 int main()
 {
-
-
 	srand((uint32)time(0));
+	
+	__int64 freq;
+	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
+	double spc = 1.0 / freq;
 
-	std::shared_ptr<std::vector<size_t>> folds = cnn::utils::FoldsFactory::prepareSequence(117, 7, cnn::utils::FoldsFactory::FitTactic::DEFAULT);
-	std::shared_ptr<std::vector<size_t>> folds2 = cnn::utils::FoldsFactory::prepareSequence(117, 7, cnn::utils::FoldsFactory::FitTactic::CUT);
-	std::shared_ptr<std::vector<size_t>> folds3 = cnn::utils::FoldsFactory::prepareSequence(117, 7, cnn::utils::FoldsFactory::FitTactic::EXTEND_WITH_COPIES);
-
-	cnn::utils::FoldsFactory::FoldsPtrS f1 = cnn::utils::FoldsFactory::prepareFolds(folds, 7);
-	cnn::utils::FoldsFactory::FoldsPtrS f2 = cnn::utils::FoldsFactory::prepareFolds(folds2, 7);
-	cnn::utils::FoldsFactory::FoldsPtrS f3 = cnn::utils::FoldsFactory::prepareFolds(folds3, 7);
-
-	std::vector<std::string> files;
+	/*
 	std::string names[] = {
 		"9336923", "9338535", "anpage", "asamma", "asewil",
 		"astefa", "drbost", "ekavaz", "elduns", "kaknig", 
 		"klclar", "ksunth", "lfso", "mbutle", "phughe", 
 		"sbains", "slbirc", "vstros", "yfhsie"};
-	
-
+	*/
+	std::string names[] = {"slbirc"};
 	size_t nsize = ARRAYSIZE(names);
 
+	std::vector<std::string> files;
 	for(size_t a=0UL; a<1UL; ++a){
 		for(size_t n=0UL; n<nsize; ++n){
-			for(size_t i=1UL; i<=20; ++i){
+			for(size_t i=1UL; i<=8; ++i){
 				std::stringstream path;
 				path << "data/" << names[n] << "/" << names[n] << "." << i << ".jpg";
 				files.push_back(path.str());
 			}
 		}
-		/*for(size_t i=1UL; i<=2; ++i){
-			std::stringstream path;
-			path << "data/test/test." << i << ".jpg";
-			files.push_back(path.str());
-		}*/
 	}
 
-	__int64 freq, s1, s12, s2, e1, e2, pre1;
-	__int64 p0, p1, p2, p3;
-	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
-	double spc = 1.0 / freq;
+	std::vector<std::string> filtersFiles;
+	filtersFiles.push_back("data/test/filter5.png");
+	filtersFiles.push_back("data/test/filter6.png");
 
+	// Load images
 	std::shared_ptr<cnn::ImageBatch<uchar>> b = cnn::ImageBatch<uchar>::fromFiles(files, true);
+	std::shared_ptr<cnn::ImageBatch<uchar>> filtersUchar = cnn::ImageBatch<uchar>::fromFiles(filtersFiles, true);
 
-	cnn::ImageBatch<uchar> center(b->getImageWidth(), b->getImageHeight(), b->getImageChannelsCount());
-	center.allocateSpaceForImages(1, true);
-	
-	cnn::ImageBatch<uchar> centerized(b->getImageWidth(), b->getImageHeight(), b->getImageChannelsCount());
-	centerized.allocateSpaceForImages(b->getImagesCount(), true);
-	
-	cnn::ImageBatch<uchar> eroded(b->getImageWidth(), b->getImageHeight(), b->getImageChannelsCount());
-	eroded.allocateSpaceForImages(b->getImagesCount(), true);
-	{
-		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&pre1));
-		//std::vector<std::pair<uchar, uchar> > res = b->findImagesColorsBoundaries();
-		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s1));
-
-		cnn::gpu::GpuBuffer devbuffer(b->getBatchByteSize());
-		cnn::gpu::GpuBuffer devbuffersingle(b->getAlignedImageByteSize());
-		cnn::gpu::GpuBuffer devbuffer2(b->getBatchByteSize());
-		cnn::gpu::GpuBuffer devbound(b->getImagesCount() * b->getImageChannelsCount() * 2);
-		cnn::gpu::GpuBuffer devbuffer3(b->getBatchByteSize());
-		//cnn::gpu::GpuBuffer devbufferfloat(b->getBatchByteSize() * sizeof(float));
-
-		assert(cudaDeviceSynchronize() == cudaSuccess);
-		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s12));
-		
-		devbuffer.writeToDevice(b->getBatchDataPtr(), b->getBatchByteSize());
-		assert(cudaDeviceSynchronize() == cudaSuccess);
-		
-		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&s2));
-	
-		cnn::gpu::Tasks::buildCenterMap<uchar>(*b, devbuffer, devbuffersingle);
-#ifdef MEASURE_SEPARATE
-		assert(cudaDeviceSynchronize() == cudaSuccess);
-		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&p0));
-#endif		
-
-		cnn::gpu::Tasks::centerizeWithMap<uchar>(*b, devbuffer, devbuffersingle, devbuffer2);
-#ifdef MEASURE_SEPARATE
-		assert(cudaDeviceSynchronize() == cudaSuccess);
-		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&p1));
-#endif
-
-		cnn::gpu::Tasks::findEachImageBoundaries<uchar>(*b, devbuffer2, devbound);
-#ifdef MEASURE_SEPARATE
-		assert(cudaDeviceSynchronize() == cudaSuccess);
-		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&p2));
-#endif		
-
-		cnn::gpu::Tasks::erodeEachImageUsingBoundaries<uchar>(*b, devbuffer2, devbound, devbuffer3, 255);
-#ifdef MEASURE_SEPARATE
-		assert(cudaDeviceSynchronize() == cudaSuccess);
-		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&p3));
-
-		std::cout 
-			<< "center map: " << (double(p0 - s2) * spc)
-			<< "\n centering: " << (double(p1 - p0) * spc)
-			<< "\nboundaries: " << (double(p2 - p1) * spc)
-			<< "\n   eroding: " << (double(p3 - p2) * spc)
-			<< "\n\n";
-#endif
-
-		//cnn::gpu::Tasks::convert<uchar, float>(*b, devbuffer3, devbufferfloat);
-		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e1));
-		assert(cudaDeviceSynchronize() == cudaSuccess);
-		
-		std::vector<uchar> bounds(b->getImagesCount() * b->getImageChannelsCount() * 2);
-		devbound.loadFromDevice(bounds.data(), b->getImagesCount() * b->getImageChannelsCount() * 2);
-
-		devbuffersingle.loadFromDevice(center.getBatchDataPtr(), center.getAlignedImageByteSize());
-
-		devbuffer2.loadFromDevice(centerized.getBatchDataPtr(), b->getBatchByteSize());
-		devbuffer3.loadFromDevice(eroded.getBatchDataPtr(), b->getBatchByteSize());
-
-		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&e2));
-		assert(cudaDeviceSynchronize() == cudaSuccess);
-		
-		std::cout << "find            "	<< double(s1 - pre1) * spc << std::endl;
-		std::cout << "allocation:     " << double(s12 - s1) * spc << std::endl;
-		std::cout << "send:           " << double(s2 - s12) * spc << std::endl;
-		std::cout << "comp:           " << double(e1 - s2) * spc << std::endl;
-		std::cout << "recv & dealloc: " << double(e2 - e1) * spc << std::endl;
-		std::cout << "all:            " << double(e2 - pre1) * spc << std::endl;
-		
-		cv::namedWindow("some name1", CV_WINDOW_AUTOSIZE);
-		cv::namedWindow("some name2", CV_WINDOW_AUTOSIZE);
-		cv::namedWindow("some name3", CV_WINDOW_AUTOSIZE);
-		cv::namedWindow("some name4", CV_WINDOW_AUTOSIZE);
-
-		cv::imshow("some name1", b->retriveImageAsMat(130));
-		cv::imshow("some name2", center.retriveImageAsMat(0));
-		cv::imshow("some name3", centerized.retriveImageAsMat(130));
-		cv::imshow("some name4", eroded.retriveImageAsMat(130));
+	bool dof = true;
+	if (dof){
+		doFloat(b, filtersUchar);
+	} else {
+		doUchar(b, filtersUchar);
 	}
-	cv::waitKey(0);
 
     return 0;
+}
+
+
+
+void doUchar(
+	std::shared_ptr<cnn::ImageBatch<uchar>>& pImages, 
+	std::shared_ptr<cnn::ImageBatch<uchar>>& pKernels)
+{
+	cudaSetDevice(cnn::config::Cuda::CUDA_DEVICE_ID);
+	{
+		// space for uchars and floats
+		cnn::gpu::GpuBuffer bImages;
+		bImages.allocate(pImages->getBatchByteSize());
+		bImages.writeToDevice(pImages->getBatchDataPtr(), pImages->getBatchByteSize());
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		// centering
+		cnn::gpu::GpuBuffer bCenterImage;
+		bCenterImage.allocate(pImages->getAlignedImageByteSize() * sizeof(float));
+
+		cnn::gpu::AverageCenterizer<uchar> cent;
+		cent.build(*pImages, bImages, bCenterImage);
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		cnn::gpu::GpuBuffer bCenterized;
+		bCenterized.allocate(bImages.getByteSize());
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		cent.normalize(*pImages, bImages, bCenterImage, bCenterized);
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		// sharp
+		cnn::gpu::Sharpener<uchar> shrp;
+		shrp.build(*pImages, bCenterized, bCenterImage);
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		shrp.normalize(*pImages, bCenterized, bCenterImage, bCenterized);
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		// convolution
+		cnn::gpu::GpuBuffer bKernels;
+		bKernels.allocate(pKernels->getBatchByteSize());
+		bKernels.writeToDevice(pKernels->getBatchDataPtr(), pKernels->getBatchByteSize());
+
+		cnn::ImageBatch<uchar> filtered(89, 99, pImages->getImageChannelsCount());
+		filtered.allocateSpaceForImages(pImages->getImagesCount() * pKernels->getImagesCount(), true);
+
+		cnn::gpu::GpuBuffer bFilteredBuffer;
+		bFilteredBuffer.allocate(filtered.getBatchByteSize());
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		cnn::gpu::SignalConvolution<uchar> sc;
+		sc.compute(*pImages, bCenterized, *pKernels, bKernels, filtered, bFilteredBuffer, 2, 2);
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		// load
+		cnn::ImageBatch<uchar> centerized(pImages->getImageWidth(), pImages->getImageHeight(), pImages->getImageChannelsCount());
+		centerized.allocateSpaceForImages(pImages->getImagesCount(), true);
+		bCenterized.loadFromDevice(centerized.getBatchDataPtr(), centerized.getBatchByteSize());
+		bFilteredBuffer.loadFromDevice(filtered.getBatchDataPtr(), filtered.getBatchByteSize());
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		// show
+		cv::namedWindow("raw images");
+		cv::namedWindow("centered images");
+		cv::namedWindow("kerneled images");
+		cv::namedWindow("kernels");
+
+		cv::imshow("raw images", pImages->retriveAllImagesAsMat(5));
+		cv::imshow("centered images", centerized.retriveAllImagesAsMat(5));
+		cv::imshow("kerneled images", filtered.retriveAllImagesAsMat(pKernels->getImagesCount()));
+		cv::imshow("kernels", pKernels->retriveAllImagesAsMat(pKernels->getImagesCount()));
+	}
+	cv::waitKey(0);
+}
+
+
+void doFloat(
+	std::shared_ptr<cnn::ImageBatch<uchar>>& b, 
+	std::shared_ptr<cnn::ImageBatch<uchar>>& filtersUchar)
+{
+	cnn::ImageBatch<float> fb(b->getImageWidth(), b->getImageHeight(), b->getImageChannelsCount());
+	fb.allocateSpaceForImages(b->getImagesCount(), true);
+
+	cudaSetDevice(cnn::config::Cuda::CUDA_DEVICE_ID);
+	{
+		// space for uchars and floats
+		cnn::gpu::GpuBuffer uchars;
+		uchars.allocate(b->getBatchByteSize());
+		uchars.writeToDevice(b->getBatchDataPtr(), b->getBatchByteSize());
+
+		cnn::gpu::GpuBuffer floats;
+		floats.allocate(b->getBatchByteSize() * sizeof(float));
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		// convert
+		cnn::gpu::Converter<uchar, float> converter;
+		converter.convert(*b, uchars, floats);
+		assert(cudaDeviceSynchronize() == cudaSuccess); 
+
+		// convert filters
+		uchars.writeToDevice(filtersUchar->getBatchDataPtr(), filtersUchar->getBatchByteSize());
+		
+		cnn::gpu::GpuBuffer kernels;
+		kernels.allocate(filtersUchar->getBatchByteSize() * sizeof(float));
+		converter.convert(*filtersUchar, uchars, kernels);
+		assert(cudaDeviceSynchronize() == cudaSuccess);  
+
+		// centering
+		cnn::gpu::GpuBuffer centerImage;
+		centerImage.allocate(b->getAlignedImageByteSize() * sizeof(float));
+
+		cnn::gpu::AverageCenterizer<float> cent;
+		cent.build(fb, floats, centerImage);
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		cnn::gpu::GpuBuffer centerized;
+		centerized.allocate(floats.getByteSize());
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		cent.normalize(fb, floats, centerImage, centerized);
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		// sharp
+		cnn::gpu::Sharpener<float> shrp;
+		shrp.build(fb, centerized, centerImage);
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		shrp.normalize(fb, centerized, centerImage, centerized);
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		// convolution
+		cnn::ImageBatch<float> filtered(35, 39, b->getImageChannelsCount());
+		filtered.allocateSpaceForImages(b->getImagesCount() * filtersUchar->getImagesCount(), true);
+
+		cnn::gpu::GpuBuffer filteredBuffer;
+		filteredBuffer.allocate(filtered.getBatchByteSize());
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		
+		cnn::ImageBatch<float> filters(filtersUchar->getImageWidth(), filtersUchar->getImageHeight(), filtersUchar->getImageChannelsCount());
+		filters.allocateSpaceForImages(2, true);
+
+		cnn::gpu::SignalConvolution<float> sc;
+		sc.compute(fb, centerized, filters, kernels, filtered, filteredBuffer, 5, 5);
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		// unconvert centerized
+		cnn::gpu::Converter<float, uchar> converter2;
+		converter2.convert(fb, centerized, uchars);
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		uchars.loadFromDevice(b->getBatchDataPtr(), b->getBatchByteSize());
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		// unconvert filtered
+		converter2.convert(filtered, filteredBuffer, uchars);
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		cnn::ImageBatch<uchar> filterResult(filtered.getImageWidth(), filtered.getImageHeight(), filtered.getImageChannelsCount());
+		filterResult.allocateSpaceForImages(b->getImagesCount() * filters.getImagesCount(), true);
+		uchars.loadFromDevice(filterResult.getBatchDataPtr(), filterResult.getBatchByteSize());
+		assert(cudaDeviceSynchronize() == cudaSuccess);
+
+		// show
+		cv::namedWindow("centered images");
+		cv::namedWindow("kerneled images");
+		cv::namedWindow("kernels");
+
+		cv::imshow("centered images", b->retriveAllImagesAsMat(5));
+		cv::imshow("kerneled images", filterResult.retriveAllImagesAsMat(filters.getImagesCount()));
+		cv::imshow("kernels", filtersUchar->retriveAllImagesAsMat(filters.getImagesCount()));
+	}
+	cv::waitKey(0);
 }
