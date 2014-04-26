@@ -69,8 +69,8 @@ int main()
 	}
 
 	std::vector<std::string> filtersFiles;
-	filtersFiles.push_back("data/test/filter5.png");
-	filtersFiles.push_back("data/test/filter6.png");
+	filtersFiles.push_back("data/test/filter1.png");
+	filtersFiles.push_back("data/test/filter2.png");
 
 	// Load images
 	std::shared_ptr<cnn::ImageBatch<uchar>> b = cnn::ImageBatch<uchar>::fromFiles(files, true);
@@ -128,7 +128,7 @@ void doUchar(
 		bKernels.allocate(pKernels->getBatchByteSize());
 		bKernels.writeToDevice(pKernels->getBatchDataPtr(), pKernels->getBatchByteSize());
 
-		cnn::ImageBatch<uchar> filtered(89, 99, pImages->getImageChannelsCount());
+		cnn::ImageBatch<uchar> filtered(35, 39, pImages->getImageChannelsCount());
 		filtered.allocateSpaceForImages(pImages->getImagesCount() * pKernels->getImagesCount(), true);
 
 		cnn::gpu::GpuBuffer bFilteredBuffer;
@@ -136,7 +136,7 @@ void doUchar(
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 
 		cnn::gpu::SignalConvolution<uchar> sc;
-		sc.compute(*pImages, bCenterized, *pKernels, bKernels, filtered, bFilteredBuffer, 2, 2);
+		sc.compute(*pImages, bCenterized, *pKernels, bKernels, filtered, bFilteredBuffer, 5, 5);
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 
 		// load
@@ -216,7 +216,7 @@ void doFloat(
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 
 		// convolution
-		cnn::ImageBatch<float> filtered(35, 39, b->getImageChannelsCount());
+		cnn::ImageBatch<float> filtered(35, 39, b->getImageChannelsCount(), 32 * sizeof(float));
 		filtered.allocateSpaceForImages(b->getImagesCount() * filtersUchar->getImagesCount(), true);
 
 		cnn::gpu::GpuBuffer filteredBuffer;
@@ -224,8 +224,8 @@ void doFloat(
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 
 		
-		cnn::ImageBatch<float> filters(filtersUchar->getImageWidth(), filtersUchar->getImageHeight(), filtersUchar->getImageChannelsCount());
-		filters.allocateSpaceForImages(2, true);
+		cnn::ImageBatch<float> filters(filtersUchar->getImageWidth(), filtersUchar->getImageHeight(), filtersUchar->getImageChannelsCount(), 32 * sizeof(float));
+		filters.allocateSpaceForImages(filtersUchar->getImagesCount(), true);
 
 		cnn::gpu::SignalConvolution<float> sc;
 		sc.compute(fb, centerized, filters, kernels, filtered, filteredBuffer, 5, 5);

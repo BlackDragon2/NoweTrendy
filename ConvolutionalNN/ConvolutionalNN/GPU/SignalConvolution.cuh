@@ -122,7 +122,7 @@ __global__ void signalConvolution(
 					for(uint32 ch=0UL; ch<gp.channelsCount; ++ch){
 						float first		= static_cast<float>(*(myImageRect + kr * ip.alignedWidthUnit + kc + ch));
 						float second	= static_cast<float>(*(myKernel + (imgr - kr) * kp.alignedWidthUnit + (imgc - kc) + ch));
-						sums[ch]		+= first * second;
+						sums[ch]		+= (first * second);
 					}
 				}
 			}

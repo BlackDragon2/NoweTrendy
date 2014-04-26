@@ -23,8 +23,6 @@ public:
 		std::vector<std::string> const& pFiles,
 		bool							pLoadInColor			= true,
 		size_t							pImageRowByteAlignment	= 32UL);
-	
-	//static std::shared_ptr<ImageBatch<uchar>> toFiles(std::vector<std::string> const& pFiles);
 
 
 public:
@@ -34,7 +32,7 @@ public:
 		size_t		pImageChannels,
 		size_t		pImageRowByteAlignment = 32UL);
 	virtual ~ImageBatch();
-	
+
 
 	void validateImage(cv::Mat const& pImage) const;
 
