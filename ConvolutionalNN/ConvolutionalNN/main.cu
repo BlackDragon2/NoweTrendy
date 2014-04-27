@@ -76,7 +76,7 @@ int main()
 	std::shared_ptr<cnn::ImageBatch<uchar>> b = cnn::ImageBatch<uchar>::fromFiles(files, true);
 	std::shared_ptr<cnn::ImageBatch<uchar>> filtersUchar = cnn::ImageBatch<uchar>::fromFiles(filtersFiles, true);
 
-	bool dof = true;
+	bool dof = false;
 	if (dof){
 		doFloat(b, filtersUchar);
 	} else {
@@ -165,7 +165,7 @@ void doFloat(
 	std::shared_ptr<cnn::ImageBatch<uchar>>& b, 
 	std::shared_ptr<cnn::ImageBatch<uchar>>& filtersUchar)
 {
-	cnn::ImageBatch<float> fb(b->getImageWidth(), b->getImageHeight(), b->getImageChannelsCount());
+	cnn::ImageBatch<float> fb(b->getImageWidth(), b->getImageHeight(), b->getImageChannelsCount(), 32 * sizeof(float));
 	fb.allocateSpaceForImages(b->getImagesCount(), true);
 
 	cudaSetDevice(cnn::config::Cuda::CUDA_DEVICE_ID);
