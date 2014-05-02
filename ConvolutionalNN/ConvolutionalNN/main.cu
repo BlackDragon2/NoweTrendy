@@ -62,19 +62,27 @@ int main()
 		for(size_t n=0UL; n<nsize; ++n){
 			for(size_t i=1UL; i<=8; ++i){
 				std::stringstream path;
-				path << "data/" << names[n] << "/" << names[n] << "." << i << ".jpg";
+				path << "data/" << names[n] << "/" << names[n] << "." << (i * 2) << ".jpg";
 				files.push_back(path.str());
 			}
 		}
 	}
 
 	std::vector<std::string> filtersFiles;
-	filtersFiles.push_back("data/test/filter1.png");
-	filtersFiles.push_back("data/test/filter2.png");
+	filtersFiles.push_back("data/test/none.png");
+	filtersFiles.push_back("data/test/blur1.png");
+	filtersFiles.push_back("data/test/sharp1.png");
+
+	bool color = false;
 
 	// Load images
-	std::shared_ptr<cnn::ImageBatch<uchar>> b = cnn::ImageBatch<uchar>::fromFiles(files, true);
-	std::shared_ptr<cnn::ImageBatch<uchar>> filtersUchar = cnn::ImageBatch<uchar>::fromFiles(filtersFiles, true);
+	std::shared_ptr<cnn::ImageBatch<uchar>> b = cnn::ImageBatch<uchar>::fromFiles(files, color);
+	std::shared_ptr<cnn::ImageBatch<uchar>> filtersUchar = cnn::ImageBatch<uchar>::fromFiles(filtersFiles, color);
+
+	cudaDeviceProp prop0;
+	cudaGetDeviceProperties(&prop0, 0);
+
+	cudaSetDevice(cnn::config::Cuda::CUDA_DEVICE_ID);
 
 	bool dof = false;
 	if (dof){
@@ -92,7 +100,6 @@ void doUchar(
 	std::shared_ptr<cnn::ImageBatch<uchar>>& pImages, 
 	std::shared_ptr<cnn::ImageBatch<uchar>>& pKernels)
 {
-	cudaSetDevice(cnn::config::Cuda::CUDA_DEVICE_ID);
 	{
 		// space for uchars and floats
 		cnn::gpu::GpuBuffer bImages;
@@ -128,7 +135,7 @@ void doUchar(
 		bKernels.allocate(pKernels->getBatchByteSize());
 		bKernels.writeToDevice(pKernels->getBatchDataPtr(), pKernels->getBatchByteSize());
 
-		cnn::ImageBatch<uchar> filtered(35, 39, pImages->getImageChannelsCount());
+		cnn::ImageBatch<uchar> filtered(178, 198, pImages->getImageChannelsCount());
 		filtered.allocateSpaceForImages(pImages->getImagesCount() * pKernels->getImagesCount(), true);
 
 		cnn::gpu::GpuBuffer bFilteredBuffer;
@@ -136,7 +143,7 @@ void doUchar(
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 
 		cnn::gpu::SignalConvolution<uchar> sc;
-		sc.compute(*pImages, bCenterized, *pKernels, bKernels, filtered, bFilteredBuffer, 5, 5);
+		sc.compute(*pImages, bCenterized, *pKernels, bKernels, filtered, bFilteredBuffer, 1, 1);
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 
 		// load
@@ -168,7 +175,6 @@ void doFloat(
 	cnn::ImageBatch<float> fb(b->getImageWidth(), b->getImageHeight(), b->getImageChannelsCount(), 32 * sizeof(float));
 	fb.allocateSpaceForImages(b->getImagesCount(), true);
 
-	cudaSetDevice(cnn::config::Cuda::CUDA_DEVICE_ID);
 	{
 		// space for uchars and floats
 		cnn::gpu::GpuBuffer uchars;

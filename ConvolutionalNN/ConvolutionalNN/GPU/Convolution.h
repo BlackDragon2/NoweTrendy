@@ -14,8 +14,9 @@ template <typename T>
 class Convolution {
 public:
 	Convolution();
-	virtual ~Convolution();
-	
+	virtual ~Convolution(); 
+
+
 	virtual void compute(
 		ImageBatch<T> const&	pInputImageBatch,
 		GpuBuffer&				pInputImageBuffer,

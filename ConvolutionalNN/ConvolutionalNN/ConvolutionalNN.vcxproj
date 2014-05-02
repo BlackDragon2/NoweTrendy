@@ -169,6 +169,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="GPU\AverageCenterizer.cuh" />
     <ClInclude Include="GPU\Convolution.h" />
     <ClInclude Include="GPU\GpuBuffer.cuh" />
+    <ClInclude Include="GPU\Sampler.h" />
     <ClInclude Include="GPU\Sharpener.cuh" />
     <ClInclude Include="GPU\SignalConvolution.cuh" />
     <ClInclude Include="GPU\Converter.cuh" />

@@ -60,6 +60,9 @@
     <ClInclude Include="GPU\Converter.cuh">
       <Filter>Headers\GPU</Filter>
     </ClInclude>
+    <ClInclude Include="GPU\Sampler.h">
+      <Filter>Headers\GPU</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="main.cu">

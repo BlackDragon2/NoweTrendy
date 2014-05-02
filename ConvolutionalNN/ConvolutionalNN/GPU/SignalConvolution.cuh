@@ -50,6 +50,7 @@ public:
 public:
 	SignalConvolution();
 	virtual ~SignalConvolution();
+
 	
 	virtual void compute(
 		ImageBatch<T> const&	pInputImageBatch,
@@ -76,7 +77,7 @@ SignalConvolution<T>::~SignalConvolution(){
 
 
 template <typename T>
-__global__ void signalConvolution(
+__global__ void signalConvolution_old(
 	typename SignalConvolution<T>::GeneralParams	pGeneralParams,
 	typename SignalConvolution<T>::InputParams		pInputParams, 
 	typename SignalConvolution<T>::KernelsParams	pKernelsParams,
@@ -115,28 +116,85 @@ __global__ void signalConvolution(
 	// seems ok
 	for(uint32 imgr=0UL; imgr<kp.rowsCount; ++imgr){
 		for(uint32 imgc=0UL; imgc<kp.widthUnit; imgc+=gp.channelsCount){
-			// convolution for single pixel
+			// convolution for single pixel (sum of sums)
 			for(uint32 kr=0UL; kr<=imgr; ++kr){
 				for(uint32 kc=0UL; kc<=imgc; kc+=gp.channelsCount){
 					// sum += h[kr, kc] * a[imgr - kr, imgc - kc]
 					for(uint32 ch=0UL; ch<gp.channelsCount; ++ch){
-						float first		= static_cast<float>(*(myImageRect + kr * ip.alignedWidthUnit + kc + ch));
+						float first		= static_cast<float>(*(myImageRect + kr * ip.alignedWidthUnit + kc + ch)) / 255.0F;
 						float second	= static_cast<float>(*(myKernel + (imgr - kr) * kp.alignedWidthUnit + (imgc - kc) + ch));
 						sums[ch]		+= (first * second);
 					}
 				}
 			}
+			// what to do with convolution value for one pixel?
 			for(uint32 ch=0ULL; ch<gp.channelsCount; ++ch){
 				if(sums[ch] > maximes[ch])
-					maximes[ch] = MIN(255.0F, sums[ch] / 512.0F);
+					maximes[ch] = sums[ch];
 				sums[ch] = 0.0F;
 			}
 		}
 	}
 
 	for(uint32 ch=0UL; ch<gp.channelsCount; ++ch)
-		*(myOutputField + ch) = maximes[ch];
+		*(myOutputField + ch) = static_cast<T>(tanh(maximes[ch] / 16.0F) * 255.0F);
 }
+
+
+template <typename T>
+__global__ void signalConvolution(
+	typename SignalConvolution<T>::GeneralParams	pGeneralParams,
+	typename SignalConvolution<T>::InputParams		pInputParams, 
+	typename SignalConvolution<T>::KernelsParams	pKernelsParams,
+	typename SignalConvolution<T>::OutputParams		pOutputParams)
+{
+	typename SignalConvolution<T>::GeneralParams&	gp = pGeneralParams;
+	typename SignalConvolution<T>::InputParams&		ip = pInputParams;
+	typename SignalConvolution<T>::KernelsParams&	kp = pKernelsParams;
+	typename SignalConvolution<T>::OutputParams&	op = pOutputParams;
+
+
+	// correct
+	uint32 idx = ((blockIdx.x * blockDim.x) + threadIdx.x);
+	if(idx >= gp.imagesCount * gp.kernelsCount * gp.kernelRunsPerImage)
+		return;
+
+	// correct
+	uint32 myImageIdx		= idx / (gp.kernelsCount * gp.kernelRunsPerImage);
+	uint32 myKernelRunIdx	= (idx / gp.kernelsCount) % gp.kernelRunsPerImage;
+	uint32 myKernelIdx		= idx % gp.kernelsCount;
+
+	// correct row
+	uint32 myRowIdx			= (myKernelRunIdx / gp.kernelRunsPerRow);
+	uint32 myColIdx			= (myKernelRunIdx % gp.kernelRunsPerRow) * gp.channelsCount;
+
+	// correct
+	T* myImageRect		= ip.data + myImageIdx * ip.alignedWidthUnit * ip.rowsCount + 
+		myRowIdx * ip.alignedWidthUnit * kp.offsetY + myColIdx * kp.offsetX;
+	T* myKernel			= kp.data + myKernelIdx * kp.alignedWidthUnit * kp.rowsCount;
+	T* myOutputField	= op.data +	myKernelIdx * op.alignedWidthUnit * op.rowsCount + 
+		myImageIdx * gp.kernelsCount * op.alignedWidthUnit * op.rowsCount + myRowIdx * op.alignedWidthUnit + myColIdx;
+
+	float sums[3] = {0.0F, 0.0F, 0.0F};
+	float norm[3] = {0.0F, 0.0F, 0.0F};
+
+	// convolution for single pixel (sum of sums)
+	for(uint32 kr=0UL; kr<kp.rowsCount; ++kr){
+		for(uint32 kc=0UL; kc<kp.widthUnit; kc+=gp.channelsCount){
+			// sum += h[kr, kc] * a[imgr - kr, imgc - kc]
+			for(uint32 ch=0UL; ch<gp.channelsCount; ++ch){
+				float first		= static_cast<float>(*(myImageRect + kr * ip.alignedWidthUnit + kc + ch));
+				float second	= static_cast<float>(*(myKernel + kr * kp.alignedWidthUnit + kc + ch)) - 128.0F;
+				norm[ch] += abs(second);
+				sums[ch] += (first * second);
+			}
+		}
+	}
+
+	for(uint32 ch=0UL; ch<gp.channelsCount; ++ch)
+		*(myOutputField + ch) = sums[ch] / norm[ch];
+}
+
 
 template <typename T>
 void SignalConvolution<T>::compute(
