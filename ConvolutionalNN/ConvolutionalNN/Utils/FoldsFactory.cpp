@@ -2,60 +2,75 @@
 #include <algorithm>
 
 #include "FoldsFactory.h"
+#include "Utils.h"
 
 
 namespace cnn {
 	namespace utils {
 
 
-std::shared_ptr<std::vector<size_t>> FoldsFactory::prepareFoldVector(
+FoldsFactory::SequencePtrS FoldsFactory::prepareSequence(
 	size_t		pElementsCount, 
 	size_t		pFoldsCount, 
 	FitTactic	pFitTactic)
 {
-	std::shared_ptr<std::vector<size_t>> v(new std::vector<size_t>(pElementsCount));
-	acquireFitTactic(pFoldsCount, pFitTactic, *v);
+	std::shared_ptr<std::vector<size_t>> v(new std::vector<size_t>(
+		acquireFitTactic(pElementsCount, pFoldsCount, pFitTactic)));
 
 	size_t to = std::min(pElementsCount, v->size());
 	for(size_t i=0UL; i<to; ++i)
 		(*v)[i] = i;
 
-	for(size_t i=pElementsCount; i<v->size(); ++i)
-		(*v)[i] = rand() % pElementsCount;
+	for(size_t i=to; i<v->size(); ++i)
+		(*v)[i] = bigRand64() % pElementsCount;
 
 	std::random_shuffle(v->begin(), v->end());
 	return v;
 }
 
 
-std::shared_ptr<std::vector<size_t>> FoldsFactory::prepareFoldVectorWithCopies(
+FoldsFactory::SequencePtrS FoldsFactory::prepareSequenceWithCopies(
 	size_t		pElementsCount, 
 	size_t		pFoldsCount, 
 	FitTactic	pFitTactic)
 {
-	std::shared_ptr<std::vector<size_t>> v(new std::vector<size_t>(pElementsCount));
-	acquireFitTactic(pFoldsCount, pFitTactic, *v);
+	std::shared_ptr<std::vector<size_t>> v(new std::vector<size_t>(
+		acquireFitTactic(pElementsCount, pFoldsCount, pFitTactic)));
 
 	for(size_t i=0UL; i<v->size(); ++i)
-		(*v)[i] = rand() % v->size();
+		(*v)[i] = bigRand64() % pElementsCount;
 	
 	return v;
 }
 
-	
-void FoldsFactory::acquireFitTactic(
-	size_t					pFoldsCount, 
-	FitTactic				pFitTactic,
-	std::vector<size_t>&	pVector)
+
+FoldsFactory::FoldsPtrS FoldsFactory::prepareFolds(
+	SequencePtrS const& pSequence,
+	size_t				pFoldsCount)
 {
-	size_t rest = pVector.size() % pFoldsCount;
-	if(rest == 0UL || pFitTactic == FitTactic::DEFAULT)
-		return;
+	FoldsPtrS folds(new Folds(pFoldsCount, Sequence()));
+	for(size_t f=0UL; f<pFoldsCount; ++f)
+		(*folds)[f].reserve(static_cast<size_t>(std::ceil(
+			static_cast<double>(pSequence->size()) / pFoldsCount)));
+
+	for(size_t s=0UL; s<pSequence->size(); ++s)
+		(*folds)[s % pFoldsCount].push_back((*pSequence)[s]);
+
+	return folds;
+}
+
 	
+size_t FoldsFactory::acquireFitTactic(
+	size_t		pElementsCount,
+	size_t		pFoldsCount, 
+	FitTactic	pFitTactic)
+{
+	size_t rest = pElementsCount % pFoldsCount;	
 	if(pFitTactic == FitTactic::CUT)
-		pVector.resize(pVector.size() - rest);
+		return pElementsCount - rest;
 	else if(pFitTactic == FitTactic::EXTEND_WITH_COPIES)
-		pVector.resize(pVector.size() + pFoldsCount - rest);
+		return pElementsCount + pFoldsCount - rest;
+	return pElementsCount;
 }
 
 

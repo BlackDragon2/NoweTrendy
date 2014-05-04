@@ -7,155 +7,100 @@
 
 #include "cuda_runtime.h"
 
+#include "../Types.h"
+
 
 namespace cnn {
 	namespace gpu {
 
 
-template <typename T>
 class GpuBuffer {
 public:
 	GpuBuffer();
-	GpuBuffer(size_t pBufferUnitsCount);
-	GpuBuffer(size_t pBufferUnitsCount, T* pData);
+	GpuBuffer(size_t pBytesCount, size_t pByteAlignment = 32UL);
+	template <typename T> GpuBuffer(size_t pBytesCount, T* pData, size_t pGpuBufferOffset = 0UL, size_t pByteAlignment = 32UL);
 	virtual ~GpuBuffer();
 
 
-	void allocateBytes(size_t pBufferBytesCount);
-	void allocateUnits(size_t pBufferUnitsCount);
+	void allocate(size_t pBytesCount, size_t pByteAlignment = 32UL);
 	void free();
-	void reallocateBytes(size_t pBufferBytesCount);
-	void reallocateUnits(size_t pBufferUnitsCount);
+	void reallocate(size_t pBytesCount, size_t pByteAlignment = 32UL);
 
-	void writeToDevice(T* pData, size_t pAmout);
-	void loadFromDevice(T* pData, size_t pAmout);
+	template <typename T> void writeToDevice(T* pData, size_t pBytesCount, size_t pGpuBufferOffset = 0UL);
+	template <typename T> void loadFromDevice(T* pData, size_t pBytesCount, size_t pGpuBufferOffset = 0UL);
 
-	T*			operator&();
-	T const*	operator&() const;
 
-	size_t getBufferByteSize() const;
-	size_t getBufferUnitSize() const;
+	template <typename T> T*		getDataPtr();
+	template <typename T> T const*	getDataPtr() const;
+
+	template <typename T> T*		operator&();
+	template <typename T> T const*	operator&() const;
+
+	size_t getByteSize()	const;
+	size_t getAlignment()	const;
 
 
 private:
-	T*		mAddress;
-	size_t	mBufferByteSize;
+	GpuBuffer(GpuBuffer const& pBuffer);
+	GpuBuffer& operator=(GpuBuffer const& pBuffer);
+
+
+private:
+	uchar*	mAddress;
+	size_t	mByteSize;
+	size_t	mByteAlignment;
 };
 
 
-template <typename T>
-GpuBuffer<T>::GpuBuffer()
+template <typename T> 
+GpuBuffer::GpuBuffer(size_t pBytesCount, T* pData, size_t pGpuBufferOffset, size_t pByteAlignment)
 :
 	mAddress(nullptr),
-	mBufferByteSize(0UL)
+	mByteSize(0UL),
+	mByteAlignment(0UL)
 {
-
+	allocate(pBytesCount, pByteAlignment);
+	writeToDevice(pData, pBytesCount, pGpuBufferOffset);
 }
 
 
 template <typename T>
-GpuBuffer<T>::GpuBuffer(size_t pBufferUnitsCount)
-:
-	mAddress(nullptr),
-	mBufferByteSize(0UL)
-{
-	allocateUnits(pBufferUnitsCount);
-}
-
-
-template <typename T>
-GpuBuffer<T>::GpuBuffer(size_t pBufferUnitsCount, T* pData)
-:
-	mAddress(nullptr),
-	mBufferByteSize(0UL)
-{
-	allocateUnits(pBufferUnitsCount);
-	writeToDevice(pData, pBufferUnitsCount);
-}
-
-
-template <typename T>
-GpuBuffer<T>::~GpuBuffer(){
-	free();
-}
-
-
-template <typename T>
-void GpuBuffer<T>::allocateBytes(size_t pBufferBytesCount){
-	cudaError_t result = cudaMalloc<T>(&mAddress, pBufferBytesCount);
-	assert(result == cudaSuccess);
-	mBufferByteSize = pBufferBytesCount;
-}
-
-
-template <typename T>
-void GpuBuffer<T>::allocateUnits(size_t pBufferUnitsCount){
-	allocateBytes(pBufferUnitsCount * sizeof(T));
-}
-
-
-template <typename T>
-void GpuBuffer<T>::free(){
-	if(mAddress != nullptr){
-		cudaFree(reinterpret_cast<void*>(mAddress));
-		mAddress		= nullptr;
-		mBufferByteSize = 0UL;
-	}
-}
-
-
-template <typename T>
-void GpuBuffer<T>::reallocateBytes(size_t pBufferBytesCount){
-	free();
-	allocateBytes(pBufferBytesCount);
-}
-
-
-template <typename T>
-void GpuBuffer<T>::reallocateUnits(size_t pBufferUnitsCount){
-	reallocateBytes(pBufferUnitsCount * sizeof(T));
-}
-
-
-template <typename T>
-void GpuBuffer<T>::writeToDevice(T* pData, size_t pAmout){
-	size_t amountBytes = pAmout * sizeof(T);
-	if(amountBytes > mBufferByteSize)
-		reallocateBytes(amountBytes);
-	cudaError_t result = cudaMemcpy(mAddress, pData, amountBytes, cudaMemcpyHostToDevice);
+void GpuBuffer::writeToDevice(T* pData, size_t pBytesCount, size_t pGpuBufferOffset){
+	assert(pBytesCount <= mByteSize);
+	cudaError_t result = cudaMemcpy(mAddress + pGpuBufferOffset, pData, pBytesCount, cudaMemcpyHostToDevice);
 	assert(result == cudaSuccess);
 }
 	
 
 template <typename T>
-void GpuBuffer<T>::loadFromDevice(T* pData, size_t pAmout){
-	size_t amountBytes = pAmout * sizeof(T);
-	cudaError_t result = cudaMemcpy(pData, mAddress, amountBytes, cudaMemcpyDeviceToHost);
+void GpuBuffer::loadFromDevice(T* pData, size_t pBytesCount, size_t pGpuBufferOffset){
+	assert(pBytesCount <= mByteSize);
+	cudaError_t result = cudaMemcpy(pData, mAddress + pGpuBufferOffset, pBytesCount, cudaMemcpyDeviceToHost);
 	assert(result == cudaSuccess);
 }
 
 
 template <typename T>
-T* GpuBuffer<T>::operator&(){
-	return mAddress;
+T* GpuBuffer::getDataPtr(){
+	return reinterpret_cast<T*>(mAddress);
 }
 
 
 template <typename T>
-T const* GpuBuffer<T>::operator&() const {
-	return mAddress;
+T const* GpuBuffer::getDataPtr() const {
+	return reinterpret_cast<T const*>(mAddress);
 }
 
 
 template <typename T>
-size_t GpuBuffer<T>::getBufferByteSize() const {
-	return mBufferByteSize;
+T* GpuBuffer::operator&(){
+	return getDataPtr<T>();
 }
 
 
 template <typename T>
-size_t GpuBuffer<T>::getBufferUnitSize() const {
-	return getBufferByteSize() / sizeof(T);
+T const* GpuBuffer::operator&() const {
+	return getDataPtr<T>();
 }
 
 

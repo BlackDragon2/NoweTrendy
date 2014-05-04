@@ -2,26 +2,18 @@
 #ifndef CNN_UTILS_H_
 #define CNN_UTILS_H_
 
-
-#include <vector>
-#include <algorithm>
-
-#include <opencv2/highgui/highgui.hpp>
+#include "../Types.h"
 
 
 namespace cnn {
 	namespace utils {
 
 
-template<typename T>
-T align(T pValue, T pAlign){
-	return static_cast<T>((std::ceil(static_cast<double>(pValue) / pAlign)) * pAlign);
-}
+size_t align(size_t pValue, size_t pAlign);
 
-
-size_t getCvMatBytesCount(cv::Mat const& pMat){
-	return static_cast<size_t>(pMat.size().area() * pMat.channels() * sizeof(uchar));
-}
+uint32 randU();
+uint32 bigRand32();
+uint64 bigRand64();
 
 
 	}

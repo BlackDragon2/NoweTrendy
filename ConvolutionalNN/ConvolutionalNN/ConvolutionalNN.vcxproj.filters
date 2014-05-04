@@ -16,18 +16,15 @@
     <Filter Include="Sources\Utils">
       <UniqueIdentifier>{267770aa-8863-4cef-8c94-915f2a4a7e08}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Sources\GPU">
+      <UniqueIdentifier>{d45a70f4-0de3-4b33-b69b-4411d743508a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utils\Utils.h">
       <Filter>Headers\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="ImagesBatch.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="GPU\GpuBuffer.cuh">
-      <Filter>Headers\GPU</Filter>
-    </ClInclude>
-    <ClInclude Include="GPU\Normalizations.cuh">
       <Filter>Headers\GPU</Filter>
     </ClInclude>
     <ClInclude Include="Types.h">
@@ -36,15 +33,59 @@
     <ClInclude Include="Utils\FoldsFactory.h">
       <Filter>Headers\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="ImageBatch.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\CvUtils.h">
+      <Filter>Headers\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\Convolution.h">
+      <Filter>Headers\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\SignalConvolution.cuh">
+      <Filter>Headers\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Config.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\AverageCenterizer.cuh">
+      <Filter>Headers\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\Normalizer.h">
+      <Filter>Headers\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\Sharpener.cuh">
+      <Filter>Headers\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\Converter.cuh">
+      <Filter>Headers\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\Sampler.h">
+      <Filter>Headers\GPU</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="main.cu">
       <Filter>Sources</Filter>
+    </CudaCompile>
+    <CudaCompile Include="GPU\GpuBuffer.cu">
+      <Filter>Sources\GPU</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Utils\FoldsFactory.cpp">
       <Filter>Sources\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Utils\Utils.cpp">
+      <Filter>Sources\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\CvUtils.cpp">
+      <Filter>Sources\Utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GPU\VarianceCenterizer.cuh">
+      <Filter>Headers\GPU</Filter>
+    </None>
   </ItemGroup>
 </Project>
