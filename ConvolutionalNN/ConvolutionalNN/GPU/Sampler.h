@@ -19,12 +19,16 @@ public:
 	virtual void sample(
 		ImageBatch<T> const&	pImageBatch, 
 		GpuBuffer&				pInputBuffer,
-		GpuBuffer&				pOutputBuffer) = 0;
+		GpuBuffer&				pOutputBuffer,
+		size_t					pSampleWidth,
+		size_t					pSampleHeight) = 0;
 
 	void operator()(
 		ImageBatch<T> const&	pImageBatch, 
 		GpuBuffer&				pInputBuffer,
-		GpuBuffer&				pOutputBuffer);
+		GpuBuffer&				pOutputBuffer,
+		size_t					pSampleWidth,
+		size_t					pSampleHeight);
 };
 
 
@@ -44,9 +48,11 @@ template <typename T>
 void Sampler<T>::operator()(
 	ImageBatch<T> const&	pImageBatch, 
 	GpuBuffer&				pInputBuffer,
-	GpuBuffer&				pOutputBuffer)
+	GpuBuffer&				pOutputBuffer,
+	size_t					pSampleWidth,
+	size_t					pSampleHeight)
 {
-	sample(pImageBatch, pInputBuffer, pOutputBuffer);
+	sample(pImageBatch, pInputBuffer, pOutputBuffer, pSampleWidth, pSampleHeight);
 }
 
 

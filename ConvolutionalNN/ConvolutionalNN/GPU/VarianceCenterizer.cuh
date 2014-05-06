@@ -105,7 +105,7 @@ void VarianceCenterizer<T>::build(
 	GpuBuffer&				pOutputBuffer)
 {
 	size_t units	= pImageBatch.getAlignedImageByteSize() / sizeof(T);
-	size_t blocks	= static_cast<size_t>(std::ceil(static_cast<double>(units) / config::Cuda::THREADS_PER_BLOCK));
+	size_t blocks	= blocksCount(units, config::Cuda::THREADS_PER_BLOCK);
 	
 	buildVarianceCenterMap<T><<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(
 		pInputBuffer.getDataPtr<T>(),

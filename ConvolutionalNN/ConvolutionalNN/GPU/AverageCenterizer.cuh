@@ -100,7 +100,7 @@ void AverageCenterizer<T>::build(
 	GpuBuffer&				pOutputBuffer)
 {
 	size_t units	= pImageBatch.getAlignedImageByteSize() / sizeof(T);
-	size_t blocks	= static_cast<size_t>(std::ceil(static_cast<double>(units) / config::Cuda::THREADS_PER_BLOCK));
+	size_t blocks	= utils::blocksCount(units, config::Cuda::THREADS_PER_BLOCK);
 	
 	buildMeanCenterMap<T><<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(
 		pInputBuffer.getDataPtr<T>(),

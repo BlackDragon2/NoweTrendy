@@ -1,6 +1,6 @@
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef CNN_CONFIG_H_
+#define CNN_CONFIG_H_
 
 
 #include <string>
@@ -30,4 +30,4 @@ struct Cuda {
 }
 
 
-#endif	/* CONFIG_H */
+#endif	/* CNN_CONFIG_H_ */
