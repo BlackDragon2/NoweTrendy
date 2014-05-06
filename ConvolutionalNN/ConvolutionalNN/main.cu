@@ -22,6 +22,7 @@
 #include "GPU/ImageConvolution.cuh"
 #include "GPU/VarianceCenterizer.cuh"
 #include "GPU/Sharpener.cuh"
+#include "GPU/MaxPooling.cuh"
 
 #include "Types.h"
 #include "Utils/FoldsFactory.h"

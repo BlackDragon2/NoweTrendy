@@ -214,20 +214,20 @@ void ImageConvolution<T>::compute(
 
 	size_t blocks = utils::blocksCount(kernelRunsPerImage * pInputImageBatch.getImagesCount() * pKernelsImageBatch.getImagesCount(), config::Cuda::THREADS_PER_BLOCK);
 
-	ImageConvolution<T>::GeneralParams gp;
+	GeneralParams gp;
 	gp.imagesCount			= pInputImageBatch.getImagesCount();
 	gp.channelsCount		= pInputImageBatch.getImageChannelsCount();
 	gp.kernelsCount			= pKernelsImageBatch.getImagesCount();
 	gp.kernelRunsPerRow		= kernelRunsPerRow;
 	gp.kernelRunsPerImage	= kernelRunsPerImage;
 
-	ImageConvolution<T>::InputParams ip;
+	InputParams ip;
 	ip.data				= pInputImageBuffer.getDataPtr<T>();
 	ip.widthUnit		= pInputImageBatch.getImageRowByteSize() / sizeof(T);
 	ip.alignedWidthUnit = pInputImageBatch.getAlignedImageRowByteSize() / sizeof(T);
 	ip.rowsCount		= pInputImageBatch.getImageHeight();
 	
-	ImageConvolution<T>::KernelsParams kp;
+	KernelsParams kp;
 	kp.data				= pKernelsImageBuffer.getDataPtr<T>();
 	kp.widthUnit		= pKernelsImageBatch.getImageRowByteSize() / sizeof(T);
 	kp.alignedWidthUnit	= pKernelsImageBatch.getAlignedImageRowByteSize() / sizeof(T);
@@ -235,7 +235,7 @@ void ImageConvolution<T>::compute(
 	kp.offsetX			= pKernelOffsetX;
 	kp.offsetY			= pKernelOffsetY;
 
-	ImageConvolution<T>::OutputParams op;
+	OutputParams op;
 	op.data				= pOutputImageBuffer.getDataPtr<T>();
 	op.widthUnit		= pOutputImageBatch.getImageRowByteSize() / sizeof(T);
 	op.alignedWidthUnit	= pOutputImageBatch.getAlignedImageRowByteSize() / sizeof(T);
