@@ -96,6 +96,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile>
       <Include>
       </Include>
+      <CodeGeneration>compute_13,sm_13</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -137,6 +138,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile>
       <Include>
       </Include>
+      <CodeGeneration>compute_13,sm_13</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -161,7 +163,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <CudaCompile Include="GPU\GpuBuffer.cu" />
+    <CudaCompile Include="Layer.cu" />
     <CudaCompile Include="main.cu" />
+    <CudaCompile Include="Network.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.h" />
@@ -186,6 +190,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   </ItemGroup>
   <ItemGroup>
     <None Include="GPU\VarianceCenterizer.cuh" />
+    <None Include="Layer.cuh" />
+    <None Include="LayerCuda.cuh" />
+    <None Include="Network.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -19,6 +19,12 @@
     <Filter Include="Sources\GPU">
       <UniqueIdentifier>{d45a70f4-0de3-4b33-b69b-4411d743508a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Headers\Network">
+      <UniqueIdentifier>{b9185c4c-d978-4579-941a-618a529c6ba6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources\Network">
+      <UniqueIdentifier>{e4479354-4f02-431e-b591-39c45f231aba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utils\Utils.h">
@@ -71,6 +77,9 @@
     <CudaCompile Include="GPU\GpuBuffer.cu">
       <Filter>Sources\GPU</Filter>
     </CudaCompile>
+    <CudaCompile Include="Layer.cu">
+      <Filter>Sources\Network</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Utils\FoldsFactory.cpp">
@@ -86,6 +95,12 @@
   <ItemGroup>
     <None Include="GPU\VarianceCenterizer.cuh">
       <Filter>Headers\GPU</Filter>
+    </None>
+    <None Include="Layer.cuh">
+      <Filter>Headers\Network</Filter>
+    </None>
+    <None Include="LayerCuda.cuh">
+      <Filter>Headers\Network</Filter>
     </None>
   </ItemGroup>
 </Project>
