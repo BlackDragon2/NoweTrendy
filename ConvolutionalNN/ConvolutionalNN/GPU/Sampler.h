@@ -17,14 +17,20 @@ public:
 	virtual ~Sampler();
 	
 	virtual void sample(
-		ImageBatch<T> const&	pImageBatch, 
+		ImageBatch<T> const&	pInputImageBatch,  
 		GpuBuffer&				pInputBuffer,
-		GpuBuffer&				pOutputBuffer) = 0;
+		ImageBatch<T> const&	pOutputImageBatch,
+		GpuBuffer&				pOutputBuffer,
+		size_t					pSampleWidth,
+		size_t					pSampleHeight) = 0;
 
 	void operator()(
-		ImageBatch<T> const&	pImageBatch, 
+		ImageBatch<T> const&	pInputImageBatch,  
 		GpuBuffer&				pInputBuffer,
-		GpuBuffer&				pOutputBuffer);
+		ImageBatch<T> const&	pOutputImageBatch,
+		GpuBuffer&				pOutputBuffer,
+		size_t					pSampleWidth,
+		size_t					pSampleHeight);
 };
 
 
@@ -42,11 +48,14 @@ Sampler<T>::~Sampler(){
 
 template <typename T>
 void Sampler<T>::operator()(
-	ImageBatch<T> const&	pImageBatch, 
+	ImageBatch<T> const&	pInputImageBatch, 
 	GpuBuffer&				pInputBuffer,
-	GpuBuffer&				pOutputBuffer)
+	ImageBatch<T> const&	pOutputImageBatch,
+	GpuBuffer&				pOutputBuffer,
+	size_t					pSampleWidth,
+	size_t					pSampleHeight)
 {
-	sample(pImageBatch, pInputBuffer, pOutputBuffer);
+	sample(pInputImageBatch, pInputBuffer, pOutputImageBatch, pOutputBuffer, pSampleWidth, pSampleHeight);
 }
 
 

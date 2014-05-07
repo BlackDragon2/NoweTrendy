@@ -9,21 +9,6 @@
 
 
 
-/////////// type conversion
-template <typename F, typename T>
-__global__ void simpleConverter(
-	F*		pImagesInput,
-	T*		pImagesOutput,
-	size_t	pElements)
-{
-	uint32 idx = ((blockIdx.x * blockDim.x) + threadIdx.x);
-	if(idx >= pElements)
-		return;
-
-	*(pImagesOutput + idx) = static_cast<T>(*(pImagesInput + idx));
-}
-
-
 namespace cnn {
 	namespace gpu {
 
@@ -44,6 +29,19 @@ public:
 };
 
 
+template <typename F, typename T>
+__global__ void simpleConverter(
+	F*		pImagesInput,
+	T*		pImagesOutput,
+	size_t	pElements)
+{
+	uint32 idx = ((blockIdx.x * blockDim.x) + threadIdx.x);
+	if(idx >= pElements)
+		return;
+
+	*(pImagesOutput + idx) = static_cast<T>(*(pImagesInput + idx));
+}
+
 template <typename F, typename T> 
 void Converter<F, T>::convert(
 	ImageBatch<F> const&	pImageBatch, 
@@ -51,7 +49,7 @@ void Converter<F, T>::convert(
 	GpuBuffer&				pOutputBuffer)
 {
 	size_t batchUnitSize	= pImageBatch.getBatchByteSize() / sizeof(F);
-	size_t blocks			= static_cast<size_t>(std::ceil(static_cast<double>(batchUnitSize) / config::Cuda::THREADS_PER_BLOCK));
+	size_t blocks			= utils::blocksCount(batchUnitSize, config::Cuda::THREADS_PER_BLOCK);
 	
 	simpleConverter<F, T><<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(
 		pInputBuffer.getDataPtr<F>(),

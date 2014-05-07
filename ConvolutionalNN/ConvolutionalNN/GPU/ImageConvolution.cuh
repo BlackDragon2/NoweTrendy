@@ -4,6 +4,7 @@
 
 #include "Convolution.h"
 #include "../Config.h"
+#include "../Utils/CudaUtils.h"
 
 
 namespace cnn {
@@ -13,7 +14,7 @@ namespace cnn {
 //////////////
 // TODO: Shared memory?
 template <typename T>
-class SignalConvolution : public Convolution<T> {
+class ImageConvolution : public Convolution<T> {
 public:
 	struct InputParams {
 		T*		data;
@@ -48,8 +49,8 @@ public:
 
 
 public:
-	SignalConvolution();
-	virtual ~SignalConvolution();
+	ImageConvolution();
+	virtual ~ImageConvolution();
 
 	
 	virtual void compute(
@@ -65,28 +66,28 @@ public:
 
 
 template <typename T>
-SignalConvolution<T>::SignalConvolution(){
+ImageConvolution<T>::ImageConvolution(){
 
 }
 
 
 template <typename T>
-SignalConvolution<T>::~SignalConvolution(){
+ImageConvolution<T>::~ImageConvolution(){
 
 }
 
-
+/*
 template <typename T>
-__global__ void signalConvolution_old(
-	typename SignalConvolution<T>::GeneralParams	pGeneralParams,
-	typename SignalConvolution<T>::InputParams		pInputParams, 
-	typename SignalConvolution<T>::KernelsParams	pKernelsParams,
-	typename SignalConvolution<T>::OutputParams		pOutputParams)
+__global__ void convolutionImage_old(
+	typename ImageConvolution<T>::GeneralParams	pGeneralParams,
+	typename ImageConvolution<T>::InputParams		pInputParams, 
+	typename ImageConvolution<T>::KernelsParams	pKernelsParams,
+	typename ImageConvolution<T>::OutputParams		pOutputParams)
 {
-	typename SignalConvolution<T>::GeneralParams&	gp = pGeneralParams;
-	typename SignalConvolution<T>::InputParams&		ip = pInputParams;
-	typename SignalConvolution<T>::KernelsParams&	kp = pKernelsParams;
-	typename SignalConvolution<T>::OutputParams&	op = pOutputParams;
+	typename ImageConvolution<T>::GeneralParams&	gp = pGeneralParams;
+	typename ImageConvolution<T>::InputParams&		ip = pInputParams;
+	typename ImageConvolution<T>::KernelsParams&	kp = pKernelsParams;
+	typename ImageConvolution<T>::OutputParams&	op = pOutputParams;
 
 
 	// correct
@@ -139,19 +140,19 @@ __global__ void signalConvolution_old(
 	for(uint32 ch=0UL; ch<gp.channelsCount; ++ch)
 		*(myOutputField + ch) = static_cast<T>(tanh(maximes[ch] / 16.0F) * 255.0F);
 }
-
+*/
 
 template <typename T>
-__global__ void signalConvolution(
-	typename SignalConvolution<T>::GeneralParams	pGeneralParams,
-	typename SignalConvolution<T>::InputParams		pInputParams, 
-	typename SignalConvolution<T>::KernelsParams	pKernelsParams,
-	typename SignalConvolution<T>::OutputParams		pOutputParams)
+__global__ void convolutionImage(
+	typename ImageConvolution<T>::GeneralParams	pGeneralParams,
+	typename ImageConvolution<T>::InputParams	pInputParams, 
+	typename ImageConvolution<T>::KernelsParams	pKernelsParams,
+	typename ImageConvolution<T>::OutputParams	pOutputParams)
 {
-	typename SignalConvolution<T>::GeneralParams&	gp = pGeneralParams;
-	typename SignalConvolution<T>::InputParams&		ip = pInputParams;
-	typename SignalConvolution<T>::KernelsParams&	kp = pKernelsParams;
-	typename SignalConvolution<T>::OutputParams&	op = pOutputParams;
+	typename ImageConvolution<T>::GeneralParams&	gp = pGeneralParams;
+	typename ImageConvolution<T>::InputParams&		ip = pInputParams;
+	typename ImageConvolution<T>::KernelsParams&	kp = pKernelsParams;
+	typename ImageConvolution<T>::OutputParams&		op = pOutputParams;
 
 
 	// correct
@@ -197,7 +198,7 @@ __global__ void signalConvolution(
 
 
 template <typename T>
-void SignalConvolution<T>::compute(
+void ImageConvolution<T>::compute(
 	ImageBatch<T> const&	pInputImageBatch,
 	GpuBuffer&				pInputImageBuffer,
 	ImageBatch<T> const&	pKernelsImageBatch,
@@ -211,23 +212,22 @@ void SignalConvolution<T>::compute(
 	size_t kernelRunsPerCol		= (pInputImageBatch.getImageHeight() - pKernelsImageBatch.getImageHeight()) / pKernelOffsetY + 1; 
 	size_t kernelRunsPerImage	= kernelRunsPerRow * kernelRunsPerCol;
 
-	size_t blocks	= static_cast<size_t>(std::ceil(static_cast<double>(
-		kernelRunsPerImage * pInputImageBatch.getImagesCount() * pKernelsImageBatch.getImagesCount()) / config::Cuda::THREADS_PER_BLOCK));
+	size_t blocks = utils::blocksCount(kernelRunsPerImage * pInputImageBatch.getImagesCount() * pKernelsImageBatch.getImagesCount(), config::Cuda::THREADS_PER_BLOCK);
 
-	SignalConvolution<T>::GeneralParams gp;
+	GeneralParams gp;
 	gp.imagesCount			= pInputImageBatch.getImagesCount();
 	gp.channelsCount		= pInputImageBatch.getImageChannelsCount();
 	gp.kernelsCount			= pKernelsImageBatch.getImagesCount();
 	gp.kernelRunsPerRow		= kernelRunsPerRow;
 	gp.kernelRunsPerImage	= kernelRunsPerImage;
 
-	SignalConvolution<T>::InputParams ip;
+	InputParams ip;
 	ip.data				= pInputImageBuffer.getDataPtr<T>();
 	ip.widthUnit		= pInputImageBatch.getImageRowByteSize() / sizeof(T);
 	ip.alignedWidthUnit = pInputImageBatch.getAlignedImageRowByteSize() / sizeof(T);
 	ip.rowsCount		= pInputImageBatch.getImageHeight();
 	
-	SignalConvolution<T>::KernelsParams kp;
+	KernelsParams kp;
 	kp.data				= pKernelsImageBuffer.getDataPtr<T>();
 	kp.widthUnit		= pKernelsImageBatch.getImageRowByteSize() / sizeof(T);
 	kp.alignedWidthUnit	= pKernelsImageBatch.getAlignedImageRowByteSize() / sizeof(T);
@@ -235,13 +235,13 @@ void SignalConvolution<T>::compute(
 	kp.offsetX			= pKernelOffsetX;
 	kp.offsetY			= pKernelOffsetY;
 
-	SignalConvolution<T>::OutputParams op;
+	OutputParams op;
 	op.data				= pOutputImageBuffer.getDataPtr<T>();
 	op.widthUnit		= pOutputImageBatch.getImageRowByteSize() / sizeof(T);
 	op.alignedWidthUnit	= pOutputImageBatch.getAlignedImageRowByteSize() / sizeof(T);
 	op.rowsCount		= pOutputImageBatch.getImageHeight();
 
-	signalConvolution<T><<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(gp, ip, kp, op);
+	convolutionImage<T><<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(gp, ip, kp, op);
 }
 
 

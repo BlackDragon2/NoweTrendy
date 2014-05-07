@@ -175,20 +175,23 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="GPU\GpuBuffer.cuh" />
     <ClInclude Include="GPU\Sampler.h" />
     <ClInclude Include="GPU\Sharpener.cuh" />
-    <ClInclude Include="GPU\SignalConvolution.cuh" />
+    <ClInclude Include="GPU\ImageConvolution.cuh" />
     <ClInclude Include="GPU\Converter.cuh" />
     <ClInclude Include="ImageBatch.h" />
     <ClInclude Include="Types.h" />
+    <ClInclude Include="Utils\CudaUtils.h" />
     <ClInclude Include="Utils\CvUtils.h" />
     <ClInclude Include="Utils\FoldsFactory.h" />
     <ClInclude Include="Utils\Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Utils\CudaUtils.cpp" />
     <ClCompile Include="Utils\CvUtils.cpp" />
     <ClCompile Include="Utils\FoldsFactory.cpp" />
     <ClCompile Include="Utils\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="GPU\MaxPooling.cuh" />
     <None Include="GPU\VarianceCenterizer.cuh" />
     <None Include="Layer.cuh" />
     <None Include="LayerCuda.cuh" />

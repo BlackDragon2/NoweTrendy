@@ -3,6 +3,8 @@
 #define CNN_UTILS_H_
 
 #include "../Types.h"
+#include "CudaUtils.h"
+#include "CvUtils.h"
 
 
 namespace cnn {

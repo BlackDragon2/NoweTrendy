@@ -19,9 +19,10 @@
 
 #include "GPU/Converter.cuh"
 #include "GPU/GpuBuffer.cuh"
-#include "GPU/SignalConvolution.cuh"
+#include "GPU/ImageConvolution.cuh"
 #include "GPU/VarianceCenterizer.cuh"
 #include "GPU/Sharpener.cuh"
+#include "GPU/MaxPooling.cuh"
 
 #include "Types.h"
 #include "Utils/FoldsFactory.h"
@@ -73,7 +74,7 @@ int main()
 	filtersFiles.push_back("data/test/blur1.png");
 	filtersFiles.push_back("data/test/sharp1.png");
 
-	bool color = false;
+	bool color = true;
 
 	// Load images
 	std::shared_ptr<cnn::ImageBatch<uchar>> b = cnn::ImageBatch<uchar>::fromFiles(files, color);
@@ -142,7 +143,7 @@ void doUchar(
 		bFilteredBuffer.allocate(filtered.getBatchByteSize());
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 
-		cnn::gpu::SignalConvolution<uchar> sc;
+		cnn::gpu::ImageConvolution<uchar> sc;
 		sc.compute(*pImages, bCenterized, *pKernels, bKernels, filtered, bFilteredBuffer, 1, 1);
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 
@@ -233,7 +234,7 @@ void doFloat(
 		cnn::ImageBatch<float> filters(filtersUchar->getImageWidth(), filtersUchar->getImageHeight(), filtersUchar->getImageChannelsCount(), 32 * sizeof(float));
 		filters.allocateSpaceForImages(filtersUchar->getImagesCount(), true);
 
-		cnn::gpu::SignalConvolution<float> sc;
+		cnn::gpu::ImageConvolution<float> sc;
 		sc.compute(fb, centerized, filters, kernels, filtered, filteredBuffer, 5, 5);
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 

@@ -98,8 +98,7 @@ void Sharpener<T>::build(
 	GpuBuffer&				pInputBuffer,
 	GpuBuffer&				pOutputBuffer)
 {
-	size_t blocks = static_cast<size_t>(std::ceil(
-		static_cast<double>(pImageBatch.getImagesCount() * pImageBatch.getImageChannelsCount()) / config::Cuda::THREADS_PER_BLOCK));
+	size_t blocks = utils::blocksCount(pImageBatch.getImagesCount() * pImageBatch.getImageChannelsCount(), config::Cuda::THREADS_PER_BLOCK);
 
 	findEachImageBoundaries<T><<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(
 		pInputBuffer.getDataPtr<T>(),
@@ -153,7 +152,8 @@ void Sharpener<T>::normalize(
 	GpuBuffer&				pBuilderBuffer,
 	GpuBuffer&				pOutputBuffer)
 {
-	size_t blocks = static_cast<size_t>(
+	size_t blocks = utils::blocksCount(pImageBatch.getImagesCount() * pImageBatch.getImageRowByteSize() / sizeof(T), config::Cuda::THREADS_PER_BLOCK);
+	/*size_t blocks = static_cast<size_t>(
 		std::ceil(
 			static_cast<double>(
 				pImageBatch.getImagesCount() * 
@@ -161,7 +161,7 @@ void Sharpener<T>::normalize(
 				sizeof(T)
 			) 
 			/ config::Cuda::THREADS_PER_BLOCK)
-		);
+		);*/
 
 	sharpEachImageUsingBoundaries<T><<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(
 		pInputBuffer.getDataPtr<T>(),
