@@ -19,6 +19,9 @@ namespace cnn {
 template <typename T>
 class ImageBatch {
 public:
+	typedef std::shared_ptr<ImageBatch<T>> PtrS;
+
+public:
 	static std::shared_ptr<ImageBatch<uchar>> fromFiles(
 		std::vector<std::string> const& pFiles,
 		bool							pLoadInColor			= true,

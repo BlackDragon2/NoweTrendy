@@ -23,7 +23,7 @@
 #include "GPU/VarianceCenterizer.cuh"
 #include "GPU/Sharpener.cuh"
 #include "GPU/MaxPooling.cuh"
-#include "Network/Layer.cuh"
+#include "ConvolutionNetwork/ConvolutionLayer.h"
 
 #include "Types.h"
 #include "Utils/FoldsFactory.h"
@@ -144,8 +144,8 @@ void doUchar(
 		bFilteredBuffer.allocate(filtered.getBatchByteSize());
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 
-		cnn::gpu::ImageConvolution<uchar> sc;
-		sc.compute(*pImages, bCenterized, *pKernels, bKernels, filtered, bFilteredBuffer, 1, 1);
+		cnn::gpu::ImageConvolution<uchar> sc(1, 1);
+		sc.compute(*pImages, bCenterized, *pKernels, bKernels, filtered, bFilteredBuffer);
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 
 		// load
@@ -235,8 +235,8 @@ void doFloat(
 		cnn::ImageBatch<float> filters(filtersUchar->getImageWidth(), filtersUchar->getImageHeight(), filtersUchar->getImageChannelsCount(), 32 * sizeof(float));
 		filters.allocateSpaceForImages(filtersUchar->getImagesCount(), true);
 
-		cnn::gpu::ImageConvolution<float> sc;
-		sc.compute(fb, centerized, filters, kernels, filtered, filteredBuffer, 5, 5);
+		cnn::gpu::ImageConvolution<float> sc(5, 5);
+		sc.compute(fb, centerized, filters, kernels, filtered, filteredBuffer);
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 
 		// unconvert centerized

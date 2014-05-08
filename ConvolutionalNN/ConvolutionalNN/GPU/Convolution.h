@@ -17,7 +17,9 @@ public:
 
 
 public:
-	Convolution();
+	Convolution(
+		uint32 pOffsetX,
+		uint32 pOffsetY);
 	virtual ~Convolution(); 
 
 
@@ -27,9 +29,7 @@ public:
 		ImageBatch<T> const&	pKernelsImageBatch,
 		GpuBuffer&				pKernelsImageBuffer,
 		ImageBatch<T> const&	pOutputImageBatch,
-		GpuBuffer&				pOutputImageBuffer,
-		uint32					pKernelOffsetX,
-		uint32					pKernelOffsetY) = 0;
+		GpuBuffer&				pOutputImageBuffer) = 0;
 
 	virtual void operator()(
 		ImageBatch<T> const&	pInputImageBatch,
@@ -37,14 +37,30 @@ public:
 		ImageBatch<T> const&	pKernelsImageBatch,
 		GpuBuffer&				pKernelsImageBuffer,
 		ImageBatch<T> const&	pOutputImageBatch,
-		GpuBuffer&				pOutputImageBuffer,
-		uint32					pKernelOffsetX,
-		uint32					pKernelOffsetY);
+		GpuBuffer&				pOutputImageBuffer);
+
+
+	uint32 getOffsetX()	const;
+	uint32 getOffsetY()	const;
+
+	void setOffsetX(uint32 pOffsetX);
+	void setOffsetY(uint32 pOffsetY);
+
+
+private:
+	uint32 mOffsetX;
+	uint32 mOffsetY;
 };
 
 
 template <typename T>
-Convolution<T>::Convolution(){
+Convolution<T>::Convolution(
+	uint32 pOffsetX,
+	uint32 pOffsetY)
+:
+	mOffsetX(pOffsetX),
+	mOffsetY(pOffsetY)
+{
 
 }
 
@@ -62,15 +78,36 @@ void Convolution<T>::operator()(
 	ImageBatch<T> const&	pKernelsImageBatch,
 	GpuBuffer&				pKernelsImageBuffer,
 	ImageBatch<T> const&	pOutputImageBatch,
-	GpuBuffer&				pOutputImageBuffer,
-	uint32					pKernelOffsetX,
-	uint32					pKernelOffsetY)
+	GpuBuffer&				pOutputImageBuffer)
 {
 	compute(
 		pInputImageBatch, pInputImageBuffer, 
 		pKernelsImageBatch, pKernelsImageBuffer, 
-		pOutputImageBatch, pOutputImageBuffer,
-		pKernelOffsetX, pKernelOffsetY);
+		pOutputImageBatch, pOutputImageBuffer);
+}
+
+
+template <typename T>
+uint32 Convolution<T>::getOffsetX()	const {
+	return mOffsetX;
+}
+
+
+template <typename T>
+uint32 Convolution<T>::getOffsetY()	const {
+	return mOffsetY;
+}
+
+
+template <typename T>
+void Convolution<T>::setOffsetX(uint32 pOffsetX){
+	mOffsetX = pOffsetX;
+}
+
+
+template <typename T>
+void Convolution<T>::setOffsetY(uint32 pOffsetY){
+	mOffsetY = pOffsetY;
 }
 
 

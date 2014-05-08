@@ -38,21 +38,24 @@ public:
 	};
 
 public:
-	MaxPooling();
+	MaxPooling(uint32 pWidth, uint32 pHeight);
 	virtual ~MaxPooling();
 	
 	virtual void sample(
 		ImageBatch<T> const&	pInputImageBatch, 
 		GpuBuffer&				pInputBuffer,
 		ImageBatch<T> const&	pOutputImageBatch,
-		GpuBuffer&				pOutputBuffer,
-		size_t					pSampleWidth,
-		size_t					pSampleHeight);
+		GpuBuffer&				pOutputBuffer);
 };
 
 
 template <typename T>
-MaxPooling<T>::MaxPooling(){
+MaxPooling<T>::MaxPooling(
+	uint32 pWidth, 
+	uint32 pHeight)
+:
+	Sampler<T>(pWidth, pHeight)
+{
 
 }
 
@@ -117,9 +120,7 @@ void MaxPooling<T>::sample(
 	ImageBatch<T> const&	pInputImageBatch, 
 	GpuBuffer&				pInputBuffer,
 	ImageBatch<T> const&	pOutputImageBatch,
-	GpuBuffer&				pOutputBuffer,
-	size_t					pSampleWidth,
-	size_t					pSampleHeight)
+	GpuBuffer&				pOutputBuffer)
 {
 	size_t rowThreads		= static_cast<size_t>(std::ceil(static_cast<double>(pInputImageBatch.getImageWidth()) / pSampleWidth));
 	size_t colThreads		= static_cast<size_t>(std::ceil(static_cast<double>(pInputImageBatch.getImageHeight()) / pSampleHeight));
@@ -139,8 +140,8 @@ void MaxPooling<T>::sample(
 
 	GeneralParams gp;
 	gp.imagesCount		= pInputImageBatch.getImagesCount();
-	gp.sampleWidth		= pSampleWidth;
-	gp.sampleHeight		= pSampleHeight;
+	gp.sampleWidth		= getWidth();
+	gp.sampleHeight		= getHeight();
 	gp.threadsPerRow	= rowThreads;
 	gp.threadsPerCol	= colThreads;
 	gp.imageChannels	= pInputImageBatch.getImageChannelsCount();

@@ -4,6 +4,7 @@
 
 
 #include <assert.h>
+#include <memory>
 
 #include "cuda_runtime.h"
 
@@ -15,6 +16,10 @@ namespace cnn {
 
 
 class GpuBuffer {
+public:
+	typedef std::shared_ptr<GpuBuffer> PtrS;
+
+
 public:
 	GpuBuffer();
 	GpuBuffer(size_t pBytesCount, size_t pByteAlignment = 32UL);

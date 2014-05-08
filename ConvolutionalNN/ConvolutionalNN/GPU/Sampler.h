@@ -17,29 +17,43 @@ public:
 
 
 public:
-	Sampler();
+	Sampler(uint32 pWidth, uint32 pHeight);
 	virtual ~Sampler();
 	
 	virtual void sample(
 		ImageBatch<T> const&	pInputImageBatch,  
 		GpuBuffer&				pInputBuffer,
 		ImageBatch<T> const&	pOutputImageBatch,
-		GpuBuffer&				pOutputBuffer,
-		size_t					pSampleWidth,
-		size_t					pSampleHeight) = 0;
+		GpuBuffer&				pOutputBuffer) = 0;
 
 	void operator()(
 		ImageBatch<T> const&	pInputImageBatch,  
 		GpuBuffer&				pInputBuffer,
 		ImageBatch<T> const&	pOutputImageBatch,
-		GpuBuffer&				pOutputBuffer,
-		size_t					pSampleWidth,
-		size_t					pSampleHeight);
+		GpuBuffer&				pOutputBuffer);
+
+
+	uint32 getWidth()	const;
+	uint32 getHeight()	const;
+
+	void setWidth(uint32 pWidth);
+	void setHeight(uint32 pHeight);
+
+
+private:
+	uint32 mWidth;
+	uint32 mHeight;
 };
 
 
 template <typename T>
-Sampler<T>::Sampler(){
+Sampler<T>::Sampler(
+	uint32 pWidth,
+	uint32 pHeight)
+:
+	mWidth(pWidth),
+	mHeight(pHeight)
+{
 
 }
 
@@ -55,11 +69,33 @@ void Sampler<T>::operator()(
 	ImageBatch<T> const&	pInputImageBatch, 
 	GpuBuffer&				pInputBuffer,
 	ImageBatch<T> const&	pOutputImageBatch,
-	GpuBuffer&				pOutputBuffer,
-	size_t					pSampleWidth,
-	size_t					pSampleHeight)
+	GpuBuffer&				pOutputBuffer)
 {
-	sample(pInputImageBatch, pInputBuffer, pOutputImageBatch, pOutputBuffer, pSampleWidth, pSampleHeight);
+	sample(pInputImageBatch, pInputBuffer, pOutputImageBatch, pOutputBuffer);
+}
+
+
+template <typename T>
+uint32 Sampler<T>::getWidth() const {
+	return mWidth;
+}
+
+
+template <typename T>
+uint32 Sampler<T>::getHeight() const {
+	return mHeight;
+}
+
+
+template <typename T>
+void Sampler<T>::setWidth(uint32 pWidth){
+	mWidth = pWidth;
+}
+
+
+template <typename T>
+void Sampler<T>::setHeight(uint32 pHeight){
+	mHeight = pHeight;
 }
 
 

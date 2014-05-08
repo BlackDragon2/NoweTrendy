@@ -27,7 +27,7 @@ __global__ void calculatePotential(T* input, float* weights, float* output, uint
 __global__ void calculateSigmoidalOutput(float* output, uint32 neuronsNr, float* weights, float* biases);
 __global__ void calculateTanhOutput(float* output, uint32 neuronsNr, float* weights, float* biases);
 __global__ void calculateSigmoidalDelta(float* output, uint32 neuronsNr, float* errorRates, float* weights);
-__global__ void calculateTahhnDelta(float* output, uint32 neuronsNr, float* errorRates, float* weights);
+__global__ void calculateTahnDelta(float* output, uint32 neuronsNr, float* errorRates, float* weights);
 
 	}}
 

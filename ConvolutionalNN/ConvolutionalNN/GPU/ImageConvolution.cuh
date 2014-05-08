@@ -49,7 +49,9 @@ public:
 
 
 public:
-	ImageConvolution();
+	ImageConvolution(
+		uint32 pOffsetX,
+		uint32 pOffsetY);
 	virtual ~ImageConvolution();
 
 	
@@ -59,14 +61,17 @@ public:
 		ImageBatch<T> const&	pKernelsImageBatch,
 		GpuBuffer&				pKernelsImageBuffer,
 		ImageBatch<T> const&	pOutputImageBatch,
-		GpuBuffer&				pOutputImageBuffer,
-		uint32					pKernelOffsetX,
-		uint32					pKernelOffsetY);
+		GpuBuffer&				pOutputImageBuffer);
 };
 
 
 template <typename T>
-ImageConvolution<T>::ImageConvolution(){
+ImageConvolution<T>::ImageConvolution(
+	uint32 pOffsetX,
+	uint32 pOffsetY)
+:
+	Convolution<T>(pOffsetX, pOffsetY)
+{
 
 }
 
@@ -204,12 +209,10 @@ void ImageConvolution<T>::compute(
 	ImageBatch<T> const&	pKernelsImageBatch,
 	GpuBuffer&				pKernelsImageBuffer,
 	ImageBatch<T> const&	pOutputImageBatch,
-	GpuBuffer&				pOutputImageBuffer,
-	uint32					pKernelOffsetX,
-	uint32					pKernelOffsetY)
+	GpuBuffer&				pOutputImageBuffer)
 {
-	size_t kernelRunsPerRow		= (pInputImageBatch.getImageWidth() - pKernelsImageBatch.getImageWidth()) / pKernelOffsetX + 1; 
-	size_t kernelRunsPerCol		= (pInputImageBatch.getImageHeight() - pKernelsImageBatch.getImageHeight()) / pKernelOffsetY + 1; 
+	size_t kernelRunsPerRow		= (pInputImageBatch.getImageWidth() - pKernelsImageBatch.getImageWidth()) / getOffsetX() + 1; 
+	size_t kernelRunsPerCol		= (pInputImageBatch.getImageHeight() - pKernelsImageBatch.getImageHeight()) / getOffsetY() + 1; 
 	size_t kernelRunsPerImage	= kernelRunsPerRow * kernelRunsPerCol;
 
 	size_t blocks = utils::blocksCount(kernelRunsPerImage * pInputImageBatch.getImagesCount() * pKernelsImageBatch.getImagesCount(), config::Cuda::THREADS_PER_BLOCK);
@@ -232,8 +235,8 @@ void ImageConvolution<T>::compute(
 	kp.widthUnit		= pKernelsImageBatch.getImageRowByteSize() / sizeof(T);
 	kp.alignedWidthUnit	= pKernelsImageBatch.getAlignedImageRowByteSize() / sizeof(T);
 	kp.rowsCount		= pKernelsImageBatch.getImageHeight();
-	kp.offsetX			= pKernelOffsetX;
-	kp.offsetY			= pKernelOffsetY;
+	kp.offsetX			= getOffsetX();
+	kp.offsetY			= getOffsetY();
 
 	OutputParams op;
 	op.data				= pOutputImageBuffer.getDataPtr<T>();
