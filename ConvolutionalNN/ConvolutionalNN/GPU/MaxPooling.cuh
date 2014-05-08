@@ -79,7 +79,7 @@ __global__ void samplerMaxPooling(
 	uint32 idx				= ((blockIdx.x * blockDim.x) + threadIdx.x);
 	uint32 threadsPerImage	= gp.threadsPerRow * gp.threadsPerCol;
 
-	if(idx >= threadsPerImage * gp.pImagesCount)
+	if(idx >= threadsPerImage * gp.imagesCount)
 		return;
 
 	uint32 myImg	= idx / threadsPerImage;
@@ -122,8 +122,8 @@ void MaxPooling<T>::sample(
 	ImageBatch<T> const&	pOutputImageBatch,
 	GpuBuffer&				pOutputBuffer)
 {
-	size_t rowThreads		= static_cast<size_t>(std::ceil(static_cast<double>(pInputImageBatch.getImageWidth()) / pSampleWidth));
-	size_t colThreads		= static_cast<size_t>(std::ceil(static_cast<double>(pInputImageBatch.getImageHeight()) / pSampleHeight));
+	size_t rowThreads		= static_cast<size_t>(std::ceil(static_cast<double>(pInputImageBatch.getImageWidth()) / getWidth()));
+	size_t colThreads		= static_cast<size_t>(std::ceil(static_cast<double>(pInputImageBatch.getImageHeight()) / getHeight()));
 	size_t blocks			= utils::blocksCount(rowThreads * colThreads * pInputImageBatch.getImagesCount(), config::Cuda::THREADS_PER_BLOCK);
 
 	InputImageParams ip;

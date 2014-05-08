@@ -148,6 +148,10 @@ void doUchar(
 		sc.compute(*pImages, bCenterized, *pKernels, bKernels, filtered, bFilteredBuffer);
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 
+		// sample
+		cnn::gpu::MaxPooling<uchar> sampler(4, 4);
+		//sampler.sample()
+
 		// load
 		cnn::ImageBatch<uchar> centerized(pImages->getImageWidth(), pImages->getImageHeight(), pImages->getImageChannelsCount());
 		centerized.allocateSpaceForImages(pImages->getImagesCount(), true);
