@@ -23,8 +23,23 @@ public:
 	~Layer(void);
 	void initWeights(float min, float max);
 
-	template<typename T> void calculateOutput(T* input)
-	{
+	template<typename T> 
+	void calculateOutput(T* input);
+
+private:
+	uint32 neuronsNr;
+	uint32 inputLength;
+	uint32 weightsLength;
+	activationFunction activationFun;
+	float* weights;
+	float* output;
+	float* biases;
+	cnn::gpu::GpuBuffer weightsDev, outputDev, biasesDev, weightsUpdateDev;
+};
+
+template<typename T> 
+void cnn::nn::Layer::calculateOutput(T* input)
+{
 		weightsDev.writeToDevice(weights, weightsLength*sizeof(float));
 
 		int blocks;
@@ -47,18 +62,8 @@ public:
 		}
 
 		outputDev.loadFromDevice(output, neuronsNr*sizeof(float));
-	}
+}
 
-private:
-	uint32 neuronsNr;
-	uint32 inputLength;
-	uint32 weightsLength;
-	activationFunction activationFun;
-	float* weights;
-	float* output;
-	float* biases;
-	cnn::gpu::GpuBuffer weightsDev, outputDev, biasesDev, weightsUpdateDev;
-};
 	}}
 
 #endif	/* CNN_LAYER_H_ */

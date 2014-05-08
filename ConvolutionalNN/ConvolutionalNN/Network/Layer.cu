@@ -18,11 +18,11 @@ cnn::nn::Layer::Layer(uint32 neuronsNr, uint32 inputLength, activationFunction f
 
 void cnn::nn::Layer::initWeights(float min, float max)
 {
-	srand(time(0));
-	for(int i=0;i<weightsLength;i++)
-		weights[i]=min+(max-min)*(rand()/(INT_MAX+1));
-	for(int i=0;i<neuronsNr;i++)
-		biases[i]=min+(max-min)*(rand()/(INT_MAX+1));
+	srand((uint32)time(0));
+	for(uint32 i=0;i<weightsLength;i++)
+		weights[i]=min+(max-min)*(((float)rand())/RAND_MAX);
+	for(uint32 i=0;i<neuronsNr;i++)
+		biases[i]=min+(max-min)*(((float)rand())/RAND_MAX);
 }
 
 cnn::nn::Layer::~Layer(void)
