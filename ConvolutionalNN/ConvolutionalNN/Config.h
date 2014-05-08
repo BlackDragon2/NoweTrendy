@@ -12,12 +12,12 @@ namespace cnn {
 	namespace config {
 
 
-struct Author {
+/*struct Author {
 	static const std::string NAME;
 	static const std::string EMAIL;
 };
 const std::string Author::NAME	= "Michal";
-const std::string Author::EMAIL	= "michal.wendel@gmail.com";
+const std::string Author::EMAIL	= "michal.wendel@gmail.com";*/
 
 
 struct Cuda {

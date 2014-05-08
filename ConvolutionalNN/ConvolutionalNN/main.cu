@@ -23,6 +23,7 @@
 #include "GPU/VarianceCenterizer.cuh"
 #include "GPU/Sharpener.cuh"
 #include "GPU/MaxPooling.cuh"
+#include "Network/Layer.cuh"
 
 #include "Types.h"
 #include "Utils/FoldsFactory.h"

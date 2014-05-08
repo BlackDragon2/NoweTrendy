@@ -19,6 +19,12 @@
     <Filter Include="Sources\GPU">
       <UniqueIdentifier>{d45a70f4-0de3-4b33-b69b-4411d743508a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Headers\Network">
+      <UniqueIdentifier>{247405b5-b7cd-43be-9274-124b6957e468}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources\Network">
+      <UniqueIdentifier>{08306709-08c7-4d9e-80b5-ff189c21cd8a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utils\Utils.h">
@@ -74,6 +80,15 @@
     <CudaCompile Include="GPU\GpuBuffer.cu">
       <Filter>Sources\GPU</Filter>
     </CudaCompile>
+    <CudaCompile Include="Network\Layer.cu">
+      <Filter>Sources\Network</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Network\Network.cu">
+      <Filter>Sources\Network</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Network\LayerCuda.cu">
+      <Filter>Sources\Network</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Utils\FoldsFactory.cpp">
@@ -95,6 +110,15 @@
     </None>
     <None Include="GPU\MaxPooling.cuh">
       <Filter>Headers\GPU</Filter>
+    </None>
+    <None Include="Network\Layer.cuh">
+      <Filter>Headers\Network</Filter>
+    </None>
+    <None Include="Network\LayerCuda.cuh">
+      <Filter>Headers\Network</Filter>
+    </None>
+    <None Include="Network\Network.cuh">
+      <Filter>Headers\Network</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -163,9 +163,10 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <CudaCompile Include="GPU\GpuBuffer.cu" />
-    <CudaCompile Include="Layer.cu" />
     <CudaCompile Include="main.cu" />
-    <CudaCompile Include="Network.cu" />
+    <CudaCompile Include="Network\Layer.cu" />
+    <CudaCompile Include="Network\LayerCuda.cu" />
+    <CudaCompile Include="Network\Network.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.h" />
@@ -193,9 +194,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   <ItemGroup>
     <None Include="GPU\MaxPooling.cuh" />
     <None Include="GPU\VarianceCenterizer.cuh" />
-    <None Include="Layer.cuh" />
-    <None Include="LayerCuda.cuh" />
-    <None Include="Network.cuh" />
+    <None Include="Network\Layer.cuh" />
+    <None Include="Network\LayerCuda.cuh" />
+    <None Include="Network\Network.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
