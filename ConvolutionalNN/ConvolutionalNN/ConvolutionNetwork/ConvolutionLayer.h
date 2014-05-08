@@ -85,21 +85,25 @@ void ConvolutionLayer<T>::complex(){
 		mInputBuffer,
 		mKernelsBatch,
 		mKernelsBuffer,
+		mMiddleBatch,
+		mMiddleBuffer);
+}
+
+
+template <typename T>
+void ConvolutionLayer<T>::simple(){
+	mSampler->sample(
+		mMiddleBatch,
+		mMiddleBuffer,
 		mOutputBatch,
 		mOutputBuffer);
 }
 
 
 template <typename T>
-void ConvolutionLayer<T>::simple(){
-
-}
-
-
-template <typename T>
 void ConvolutionLayer<T>::operator()(){
-	//mConvolution->compute()
-	//mSampler->sample()
+	complex();
+	simple();
 }
 
 
