@@ -25,6 +25,12 @@
     <Filter Include="Sources\Network">
       <UniqueIdentifier>{08306709-08c7-4d9e-80b5-ff189c21cd8a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Headers\ConvolutionNetwork">
+      <UniqueIdentifier>{a274665f-83d1-4eb1-a31c-74dd4793a50b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources\ConvolutionNetwork">
+      <UniqueIdentifier>{1c73f540-ec08-4931-9e0e-4c9a7a501de3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utils\Utils.h">
@@ -71,6 +77,9 @@
     </ClInclude>
     <ClInclude Include="GPU\ImageConvolution.cuh">
       <Filter>Headers\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="ConvolutionNetwork\ConvolutionLayer.h">
+      <Filter>Headers\ConvolutionNetwork</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

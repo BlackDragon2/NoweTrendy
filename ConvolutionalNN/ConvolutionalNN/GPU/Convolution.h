@@ -13,6 +13,10 @@ namespace cnn {
 template <typename T>
 class Convolution {
 public:
+	typedef std::shared_ptr<Convolution<T>> PtrS;
+
+
+public:
 	Convolution();
 	virtual ~Convolution(); 
 

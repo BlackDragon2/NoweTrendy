@@ -170,6 +170,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.h" />
+    <ClInclude Include="ConvolutionNetwork\ConvolutionLayer.h" />
     <ClInclude Include="GPU\Normalizer.h" />
     <ClInclude Include="GPU\AverageCenterizer.cuh" />
     <ClInclude Include="GPU\Convolution.h" />

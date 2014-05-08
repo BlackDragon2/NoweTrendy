@@ -13,6 +13,10 @@ namespace cnn {
 template <typename T>
 class Normalizer {
 public:
+	typedef std::shared_ptr<Normalizer<T>> PtrS;
+
+
+public:
 	Normalizer();
 	virtual ~Normalizer();
 	

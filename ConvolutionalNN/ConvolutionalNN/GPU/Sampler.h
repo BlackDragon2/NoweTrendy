@@ -13,6 +13,10 @@ namespace cnn {
 template <typename T>
 class Sampler {
 public:
+	typedef std::shared_ptr<Sampler<T>> PtrS;
+
+
+public:
 	Sampler();
 	virtual ~Sampler();
 	
