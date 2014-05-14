@@ -34,6 +34,8 @@ public:
 	void operator()();
 
 
+
+
 private:
 	gpu::Convolution<T>::PtrS	mConvolution;
 	gpu::Sampler<T>::PtrS		mSampler;

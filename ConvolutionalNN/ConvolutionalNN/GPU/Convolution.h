@@ -46,6 +46,20 @@ public:
 	void setOffsetX(uint32 pOffsetX);
 	void setOffsetY(uint32 pOffsetY);
 
+	virtual uint32 countOutputImageUnitSize(
+		ImageBatch<T> const& pInputBatch,
+		ImageBatch<T> const& pKernelsBatch) const = 0;
+	virtual uint32 countOutputImageByteSize(
+		ImageBatch<T> const& pInputBatch,
+		ImageBatch<T> const& pKernelsBatch) const;
+
+	virtual uint32 countOutputUnitSize(
+		ImageBatch<T> const& pInputBatch,
+		ImageBatch<T> const& pKernelsBatch) const;
+	virtual uint32 countOutputByteSize(
+		ImageBatch<T> const& pInputBatch,
+		ImageBatch<T> const& pKernelsBatch) const;
+
 
 private:
 	uint32 mOffsetX;
@@ -108,6 +122,35 @@ void Convolution<T>::setOffsetX(uint32 pOffsetX){
 template <typename T>
 void Convolution<T>::setOffsetY(uint32 pOffsetY){
 	mOffsetY = pOffsetY;
+}
+
+ 
+template <typename T>
+uint32 Convolution<T>::countOutputImageByteSize(
+	ImageBatch<T> const& pInputBatch,
+	ImageBatch<T> const& pKernelsBatch) const 
+{
+	return countOutputImageUnitSize(pInputBatch, pKernelsBatch) * sizeof(T);
+}
+
+
+template <typename T>
+uint32 Convolution<T>::countOutputUnitSize(
+	ImageBatch<T> const& pInputBatch,
+	ImageBatch<T> const& pKernelsBatch) const 
+{
+	return countOutputImageUnitSize(pInputBatch, pKernelsBatch) * 
+		pInputBatch.getImagesCount();
+}
+
+
+template <typename T>
+uint32 Convolution<T>::countOutputByteSize(
+	ImageBatch<T> const& pInputBatch,
+	ImageBatch<T> const& pKernelsBatch) const 
+{
+	return countOutputImageByteSize(pInputBatch, pKernelsBatch) * 
+		pInputBatch.getImagesCount();
 }
 
 

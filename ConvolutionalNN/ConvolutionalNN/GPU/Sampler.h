@@ -39,6 +39,12 @@ public:
 	void setWidth(uint32 pWidth);
 	void setHeight(uint32 pHeight);
 
+	virtual uint32 countOutputImageUnitSize(ImageBatch<T> const& pInputImageBatch) const = 0;
+	virtual uint32 countOutputImageByteSize(ImageBatch<T> const& pInputImageBatch) const;
+	
+	virtual uint32 countOutputUnitSize(ImageBatch<T> const& pInputImageBatch) const;
+	virtual uint32 countOutputByteSize(ImageBatch<T> const& pInputImageBatch) const;
+
 
 private:
 	uint32 mWidth;
@@ -96,6 +102,24 @@ void Sampler<T>::setWidth(uint32 pWidth){
 template <typename T>
 void Sampler<T>::setHeight(uint32 pHeight){
 	mHeight = pHeight;
+}
+
+
+template <typename T>
+uint32 Sampler<T>::countOutputImageByteSize(ImageBatch<T> const& pInputImageBatch) const {
+	return countOutputImageUnitSize(pInputImageBatch) * sizeof(T);
+}
+
+
+template <typename T>
+uint32 Sampler<T>::countOutputUnitSize(ImageBatch<T> const& pInputImageBatch) const {
+	return countOutputImageUnitSize(pInputImageBatch) * pInputImageBatch.getImagesCount();
+}
+
+
+template <typename T>
+uint32 Sampler<T>::countOutputByteSize(ImageBatch<T> const& pInputImageBatch) const {
+	return countOutputImageByteSize(pInputImageBatch) * pInputImageBatch.getImagesCount();
 }
 
 

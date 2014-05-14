@@ -46,6 +46,8 @@ public:
 		GpuBuffer&				pInputBuffer,
 		ImageBatch<T> const&	pOutputImageBatch,
 		GpuBuffer&				pOutputBuffer);
+	 
+	virtual uint32 countOutputImageUnitSize(ImageBatch<T> const& pInputImageBatch) const;
 };
 
 
@@ -147,6 +149,20 @@ void MaxPooling<T>::sample(
 	gp.imageChannels	= pInputImageBatch.getImageChannelsCount();
 
 	samplerMaxPooling<T><<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(ip, op, gp);
+}
+
+
+template <typename T>
+uint32 MaxPooling<T>::countOutputImageUnitSize(ImageBatch<T> const& pInputImageBatch) const {
+	size_t rowThreads = static_cast<size_t>(std::ceil(static_cast<double>(pInputImageBatch.getImageWidth()) / getWidth()));
+	size_t colThreads = static_cast<size_t>(std::ceil(static_cast<double>(pInputImageBatch.getImageHeight()) / getHeight()));
+	return utils::align(
+		rowThreads * 
+		colThreads * 
+		pInputImageBatch.getImageChannelsCount() *
+		sizeof(T), 
+		pInputImageBatch.getImageRowByteAligment() * 
+		sizeof(T));
 }
 
 

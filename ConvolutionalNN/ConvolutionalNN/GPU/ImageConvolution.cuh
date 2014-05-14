@@ -62,6 +62,11 @@ public:
 		GpuBuffer&				pKernelsImageBuffer,
 		ImageBatch<T> const&	pOutputImageBatch,
 		GpuBuffer&				pOutputImageBuffer);
+
+
+	virtual uint32 countOutputImageUnitSize(
+		ImageBatch<T> const& pInputBatch,
+		ImageBatch<T> const& pKernelsBatch) const;
 };
 
 
@@ -245,6 +250,22 @@ void ImageConvolution<T>::compute(
 	op.rowsCount		= pOutputImageBatch.getImageHeight();
 
 	convolutionImage<T><<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(gp, ip, kp, op);
+}
+
+
+template <typename T>
+uint32 ImageConvolution<T>::countOutputImageUnitSize(
+	ImageBatch<T> const& pInputBatch,
+	ImageBatch<T> const& pKernelsBatch) const
+{
+	uint32 kernelRunsPerRow	= (pInputBatch.getImageWidth() - pKernelsBatch.getImageWidth()) / getOffsetX() + 1; 
+	uint32 kernelRunsPerCol	= (pInputBatch.getImageHeight() - pKernelsBatch.getImageHeight()) / getOffsetY() + 1; 
+	return utils::align(
+		kernelRunsPerRow * 
+		kernelRunsPerCol * 
+		pInputBatch.getImageChannelsCount() *
+		sizeof(T),
+		pInputBatch.getAlignedImageRowByteSize() * sizeof(T));
 }
 
 
