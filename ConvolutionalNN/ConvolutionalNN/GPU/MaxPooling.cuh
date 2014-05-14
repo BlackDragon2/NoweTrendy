@@ -114,7 +114,7 @@ __global__ void samplerMaxPooling(
 	}
 
 	for(uint32 ch=0U; ch<gp.sampleWidth; ++ch){
-		myOutputPixel[ch] = maximes[ch];
+		myOutputPixel[ch] = (ch + 1) * 32;//maximes[ch];
 	}
 }
 
