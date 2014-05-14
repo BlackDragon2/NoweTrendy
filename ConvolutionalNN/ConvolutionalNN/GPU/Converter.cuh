@@ -16,6 +16,9 @@ namespace cnn {
 template <typename F, typename T>
 class Converter {
 public:
+	typedef std::shared_ptr<Converter<F, T>> PtrS;
+
+public:
 	virtual void convert(
 		ImageBatch<F> const&	pImageBatch, 
 		GpuBuffer&				pInputBuffer,

@@ -37,6 +37,20 @@ public:
 
 	void operator()();
 
+
+	gpu::Convolution<T>::PtrS const&	getConvolution()	const;
+	gpu::Sampler<T>::PtrS const&		getSampler()		const;
+
+	ImageBatch<T>::PtrS const&	getKernelsBatch()	const;
+	gpu::GpuBuffer::PtrS const&	getKernelsBuffer()	const;
+
+	ImageBatch<T>::PtrS	const&	getInputBatch()		const;
+	gpu::GpuBuffer::PtrS const&	getInputBuffer()	const;
+	ImageBatch<T>::PtrS	const&	getMiddleBatch()	const;
+	gpu::GpuBuffer::PtrS const&	getMiddleBuffer()	const;
+	ImageBatch<T>::PtrS	const&	getOutputBatch()	const;
+	gpu::GpuBuffer::PtrS const&	getOutputBuffer()	const;
+
 	
 private:
 	gpu::Convolution<T>::PtrS	mConvolution;
@@ -110,6 +124,65 @@ void ConvolutionLayer<T>::operator()(){
 	simple();
 }
 
+
+template <typename T>
+gpu::Convolution<T>::PtrS const& ConvolutionLayer<T>::getConvolution() const {
+	return mConvolution;
+}
+
+
+template <typename T>
+gpu::Sampler<T>::PtrS const& ConvolutionLayer<T>::getSampler() const {
+	return mSampler;
+}
+
+
+template <typename T>
+ImageBatch<T>::PtrS const& ConvolutionLayer<T>::getKernelsBatch() const {
+	return mKernelsBatch;
+}
+
+
+template <typename T>
+gpu::GpuBuffer::PtrS const& ConvolutionLayer<T>::getKernelsBuffer() const {
+	return mKernelsBuffer;
+}
+
+
+template <typename T>
+ImageBatch<T>::PtrS	const& ConvolutionLayer<T>::getInputBatch() const {
+	return mInputBatch;
+}
+
+
+template <typename T>
+gpu::GpuBuffer::PtrS const& ConvolutionLayer<T>::getInputBuffer() const {
+	return mInputBuffer;
+}
+
+
+template <typename T>
+ImageBatch<T>::PtrS	const& ConvolutionLayer<T>::getMiddleBatch() const {
+	return mMiddleBatch;
+}
+
+
+template <typename T>
+gpu::GpuBuffer::PtrS const& ConvolutionLayer<T>::getMiddleBuffer() const {
+	return mMiddleBuffer;
+}
+
+
+template <typename T>
+ImageBatch<T>::PtrS	const& ConvolutionLayer<T>::getOutputBatch() const {
+	return mOutputBatch;
+}
+
+
+template <typename T>
+gpu::GpuBuffer::PtrS const& ConvolutionLayer<T>::getOutputBuffer() const {
+	return mOutputBuffer;
+}
 
 
 	}
