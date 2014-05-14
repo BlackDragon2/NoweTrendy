@@ -81,6 +81,9 @@
     <ClInclude Include="ConvolutionNetwork\ConvolutionLayer.h">
       <Filter>Headers\ConvolutionNetwork</Filter>
     </ClInclude>
+    <ClInclude Include="ConvolutionNetwork\ConvolutionNetwork.h">
+      <Filter>Headers\ConvolutionNetwork</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="main.cu">
@@ -128,6 +131,9 @@
     </None>
     <None Include="Network\Network.cuh">
       <Filter>Headers\Network</Filter>
+    </None>
+    <None Include="GPU\Packer.cuh">
+      <Filter>Headers\GPU</Filter>
     </None>
   </ItemGroup>
 </Project>

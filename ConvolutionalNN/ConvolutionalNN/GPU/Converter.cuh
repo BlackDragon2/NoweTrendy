@@ -1,6 +1,6 @@
 
-#ifndef CNN_CONVERTER_H_
-#define CNN_CONVERTER_H_
+#ifndef CNN_GPU_CONVERTER_H_
+#define CNN_GPU_CONVERTER_H_
 
 #include "../Config.h"
 
@@ -72,4 +72,4 @@ void Converter<F, T>::operator()(
 }
 
 
-#endif	/* CNN_CONVERTER_H_ */
+#endif	/* CNN_GPU_CONVERTER_H_ */

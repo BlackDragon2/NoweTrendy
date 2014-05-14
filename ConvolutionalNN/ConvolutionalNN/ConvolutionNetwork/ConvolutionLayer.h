@@ -15,6 +15,10 @@ namespace cnn {
 template <typename T>
 class ConvolutionLayer {
 public:
+	typedef std::shared_ptr<ConvolutionLayer<T>> PtrS;
+
+
+public:
 	ConvolutionLayer(
 		gpu::Convolution<T>::PtrS const&	pConvolution,
 		gpu::Sampler<T>::PtrS const&		pSampler,
@@ -33,9 +37,7 @@ public:
 
 	void operator()();
 
-
-
-
+	
 private:
 	gpu::Convolution<T>::PtrS	mConvolution;
 	gpu::Sampler<T>::PtrS		mSampler;

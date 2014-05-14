@@ -23,7 +23,7 @@
 #include "GPU/VarianceCenterizer.cuh"
 #include "GPU/Sharpener.cuh"
 #include "GPU/MaxPooling.cuh"
-#include "ConvolutionNetwork/ConvolutionLayer.h"
+#include "ConvolutionNetwork\ConvolutionNetwork.h"
 
 #include "Types.h"
 #include "Utils/FoldsFactory.h"
