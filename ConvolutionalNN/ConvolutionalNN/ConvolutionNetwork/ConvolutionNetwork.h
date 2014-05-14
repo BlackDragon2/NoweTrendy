@@ -21,7 +21,11 @@ public:
 
 	virtual void run();
 
-	virtual gpu::GpuBuffer::PtrS const& getOutputBuffer() const;
+	gpu::GpuBuffer::PtrS const& getOutputBuffer() const;
+	
+	ConvolutionLayer<Input>::PtrS const& getLayer(uint32 pIndex)	const;
+	ConvolutionLayer<Input>::PtrS const& getFirstLayer()			const;
+	ConvolutionLayer<Input>::PtrS const& getLastLayer()				const;
 
 
 private:
@@ -58,8 +62,8 @@ void ConvolutionNetwork<Input, Output>::run(){
 	}
 	if (mConverter != nullptr && mOutputBuffer != nullptr){
 		mConverter.convert(
-			mLayers[mLayers.size() - 1]->getOutputBatch(),
-			mLayers[mLayers.size() - 1]->getOutputBuffer(),
+			getLastLayer()->getOutputBatch(),
+			getLastLayer()->getOutputBuffer(),
 			mOutputBuffer);
 	}
 }
@@ -70,6 +74,24 @@ gpu::GpuBuffer::PtrS const& ConvolutionNetwork<Input, Output>::getOutputBuffer()
 	return mOutputBuffer == nullptr ? 
 		mLayers[mLayers.size() - 1]->getOutputBuffer() :
 		mOutputBuffer;
+}
+
+
+template<typename Input, typename Output>
+ConvolutionLayer<Input>::PtrS const& ConvolutionNetwork<Input, Output>::getLayer(uint32 pIndex) const {
+	return mLayers[pIndex];
+}
+
+
+template<typename Input, typename Output>
+ConvolutionLayer<Input>::PtrS const& ConvolutionNetwork<Input, Output>::getFirstLayer() const {
+	return getLayer(mLayers[0]);
+}
+
+
+template<typename Input, typename Output>
+ConvolutionLayer<Input>::PtrS const& ConvolutionNetwork<Input, Output>::getLastLayer() const {
+	return getLayer((*mLayers.rbegin()));
 }
 
 
