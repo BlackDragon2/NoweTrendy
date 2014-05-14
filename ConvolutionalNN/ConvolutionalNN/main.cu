@@ -111,7 +111,7 @@ void doUchar(
 
 		// centering
 		cnn::gpu::GpuBuffer bCenterImage;
-		bCenterImage.allocate(pImages->getAlignedImageByteSize() * sizeof(float));
+		bCenterImage.allocate(pImages->getAlignedImageByteSize());
 
 		cnn::gpu::AverageCenterizer<uchar> cent;
 		cent.build(*pImages, bImages, bCenterImage);
@@ -136,15 +136,17 @@ void doUchar(
 		cnn::gpu::GpuBuffer bKernels;
 		bKernels.allocate(pKernels->getBatchByteSize());
 		bKernels.writeToDevice(pKernels->getBatchDataPtr(), pKernels->getBatchByteSize());
-
-		cnn::ImageBatch<uchar> filtered(178, 198, pImages->getImageChannelsCount());
+		
+		cnn::gpu::ImageConvolution<uchar> sc(1, 1);
+		uint32 cx = sc.convolvedImageSizeX(*pImages, *pKernels);
+		uint32 cy = sc.convolvedImageSizeY(*pImages, *pKernels);
+		cnn::ImageBatch<uchar> filtered(cx, cy, pImages->getImageChannelsCount());
 		filtered.allocateSpaceForImages(pImages->getImagesCount() * pKernels->getImagesCount(), true);
 
 		cnn::gpu::GpuBuffer bFilteredBuffer;
 		bFilteredBuffer.allocate(filtered.getBatchByteSize());
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 
-		cnn::gpu::ImageConvolution<uchar> sc(1, 1);
 		sc.compute(*pImages, bCenterized, *pKernels, bKernels, filtered, bFilteredBuffer);
 		assert(cudaDeviceSynchronize() == cudaSuccess);
 

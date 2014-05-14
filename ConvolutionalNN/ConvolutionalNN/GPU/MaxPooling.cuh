@@ -47,7 +47,9 @@ public:
 		ImageBatch<T> const&	pOutputImageBatch,
 		GpuBuffer&				pOutputBuffer);
 	 
-	virtual uint32 countOutputImageUnitSize(ImageBatch<T> const& pInputImageBatch) const;
+
+	virtual uint32 sampledImageSizeX(ImageBatch<T> const& pInputBatch) const;
+	virtual uint32 sampledImageSizeY(ImageBatch<T> const& pInputBatch) const;
 };
 
 
@@ -124,8 +126,8 @@ void MaxPooling<T>::sample(
 	ImageBatch<T> const&	pOutputImageBatch,
 	GpuBuffer&				pOutputBuffer)
 {
-	size_t rowThreads		= static_cast<size_t>(std::ceil(static_cast<double>(pInputImageBatch.getImageWidth()) / getWidth()));
-	size_t colThreads		= static_cast<size_t>(std::ceil(static_cast<double>(pInputImageBatch.getImageHeight()) / getHeight()));
+	size_t rowThreads		= sampledImageSizeY(pInputImageBatch);
+	size_t colThreads		= sampledImageSizeX(pInputImageBatch);
 	size_t blocks			= utils::blocksCount(rowThreads * colThreads * pInputImageBatch.getImagesCount(), config::Cuda::THREADS_PER_BLOCK);
 
 	InputImageParams ip;
@@ -153,16 +155,14 @@ void MaxPooling<T>::sample(
 
 
 template <typename T>
-uint32 MaxPooling<T>::countOutputImageUnitSize(ImageBatch<T> const& pInputImageBatch) const {
-	size_t rowThreads = static_cast<size_t>(std::ceil(static_cast<double>(pInputImageBatch.getImageWidth()) / getWidth()));
-	size_t colThreads = static_cast<size_t>(std::ceil(static_cast<double>(pInputImageBatch.getImageHeight()) / getHeight()));
-	return utils::align(
-		rowThreads * 
-		colThreads * 
-		pInputImageBatch.getImageChannelsCount() *
-		sizeof(T), 
-		pInputImageBatch.getImageRowByteAligment() * 
-		sizeof(T));
+uint32 MaxPooling<T>::sampledImageSizeX(ImageBatch<T> const& pImageBatch) const {
+	return static_cast<uint32>(std::ceil(static_cast<double>(pImageBatch.getImageWidth()) / getWidth()));
+}
+
+
+template <typename T>
+uint32 MaxPooling<T>::sampledImageSizeY(ImageBatch<T> const& pImageBatch) const {
+	return static_cast<uint32>(std::ceil(static_cast<double>(pImageBatch.getImageHeight()) / getHeight()));
 }
 
 

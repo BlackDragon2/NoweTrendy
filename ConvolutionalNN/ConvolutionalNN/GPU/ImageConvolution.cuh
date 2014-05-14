@@ -63,8 +63,11 @@ public:
 		ImageBatch<T> const&	pOutputImageBatch,
 		GpuBuffer&				pOutputImageBuffer);
 
-
-	virtual uint32 countOutputImageUnitSize(
+	
+	virtual uint32 convolvedImageSizeX(
+		ImageBatch<T> const& pInputBatch,
+		ImageBatch<T> const& pKernelsBatch) const;
+	virtual uint32 convolvedImageSizeY(
 		ImageBatch<T> const& pInputBatch,
 		ImageBatch<T> const& pKernelsBatch) const;
 };
@@ -216,8 +219,8 @@ void ImageConvolution<T>::compute(
 	ImageBatch<T> const&	pOutputImageBatch,
 	GpuBuffer&				pOutputImageBuffer)
 {
-	size_t kernelRunsPerRow		= (pInputImageBatch.getImageWidth() - pKernelsImageBatch.getImageWidth()) / getOffsetX() + 1; 
-	size_t kernelRunsPerCol		= (pInputImageBatch.getImageHeight() - pKernelsImageBatch.getImageHeight()) / getOffsetY() + 1; 
+	size_t kernelRunsPerRow		= convolvedImageSizeX(pInputImageBatch, pKernelsImageBatch); 
+	size_t kernelRunsPerCol		= convolvedImageSizeY(pInputImageBatch, pKernelsImageBatch);
 	size_t kernelRunsPerImage	= kernelRunsPerRow * kernelRunsPerCol;
 
 	size_t blocks = utils::blocksCount(kernelRunsPerImage * pInputImageBatch.getImagesCount() * pKernelsImageBatch.getImagesCount(), config::Cuda::THREADS_PER_BLOCK);
@@ -254,18 +257,20 @@ void ImageConvolution<T>::compute(
 
 
 template <typename T>
-uint32 ImageConvolution<T>::countOutputImageUnitSize(
+uint32 ImageConvolution<T>::convolvedImageSizeX(
 	ImageBatch<T> const& pInputBatch,
-	ImageBatch<T> const& pKernelsBatch) const
+	ImageBatch<T> const& pKernelsBatch) const 
 {
-	uint32 kernelRunsPerRow	= (pInputBatch.getImageWidth() - pKernelsBatch.getImageWidth()) / getOffsetX() + 1; 
-	uint32 kernelRunsPerCol	= (pInputBatch.getImageHeight() - pKernelsBatch.getImageHeight()) / getOffsetY() + 1; 
-	return utils::align(
-		kernelRunsPerRow * 
-		kernelRunsPerCol * 
-		pInputBatch.getImageChannelsCount() *
-		sizeof(T),
-		pInputBatch.getAlignedImageRowByteSize() * sizeof(T));
+	return (pInputBatch.getImageWidth() - pKernelsBatch.getImageWidth()) / getOffsetX() + 1; 
+}
+
+
+template <typename T>
+uint32 ImageConvolution<T>::convolvedImageSizeY(
+	ImageBatch<T> const& pInputBatch,
+	ImageBatch<T> const& pKernelsBatch) const 
+{
+	return (pInputBatch.getImageHeight() - pKernelsBatch.getImageHeight()) / getOffsetY() + 1;
 }
 
 

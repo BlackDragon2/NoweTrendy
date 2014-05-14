@@ -39,12 +39,14 @@ public:
 	void setWidth(uint32 pWidth);
 	void setHeight(uint32 pHeight);
 
-	virtual uint32 countOutputImageUnitSize(ImageBatch<T> const& pInputImageBatch) const = 0;
+	virtual uint32 countOutputImageUnitSize(ImageBatch<T> const& pInputImageBatch) const;
 	virtual uint32 countOutputImageByteSize(ImageBatch<T> const& pInputImageBatch) const;
 	
 	virtual uint32 countOutputUnitSize(ImageBatch<T> const& pInputImageBatch) const;
 	virtual uint32 countOutputByteSize(ImageBatch<T> const& pInputImageBatch) const;
 
+	virtual uint32 sampledImageSizeX(ImageBatch<T> const& pInputBatch) const = 0;
+	virtual uint32 sampledImageSizeY(ImageBatch<T> const& pInputBatch) const = 0;
 
 private:
 	uint32 mWidth;
@@ -102,6 +104,17 @@ void Sampler<T>::setWidth(uint32 pWidth){
 template <typename T>
 void Sampler<T>::setHeight(uint32 pHeight){
 	mHeight = pHeight;
+}
+
+
+template <typename T>
+uint32 Sampler<T>::countOutputImageUnitSize(ImageBatch<T> const& pInputImageBatch) const {
+	return 
+		utils::align(
+			sampledImageSizeX(pInputImageBatch) * 
+			pInputImageBatch.getImageChannelsCount() * sizeof(T), 
+			pInputImageBatch.getImageRowByteAligment() * sizeof(T)
+		) * sampledImageSizeY(pInputImageBatch);
 }
 
 

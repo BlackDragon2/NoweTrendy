@@ -48,7 +48,7 @@ public:
 
 	virtual uint32 countOutputImageUnitSize(
 		ImageBatch<T> const& pInputBatch,
-		ImageBatch<T> const& pKernelsBatch) const = 0;
+		ImageBatch<T> const& pKernelsBatch) const;
 	virtual uint32 countOutputImageByteSize(
 		ImageBatch<T> const& pInputBatch,
 		ImageBatch<T> const& pKernelsBatch) const;
@@ -59,6 +59,13 @@ public:
 	virtual uint32 countOutputByteSize(
 		ImageBatch<T> const& pInputBatch,
 		ImageBatch<T> const& pKernelsBatch) const;
+
+	virtual uint32 convolvedImageSizeX(
+		ImageBatch<T> const& pInputBatch,
+		ImageBatch<T> const& pKernelsBatch) const = 0;
+	virtual uint32 convolvedImageSizeY(
+		ImageBatch<T> const& pInputBatch,
+		ImageBatch<T> const& pKernelsBatch) const = 0;
 
 
 private:
@@ -122,6 +129,20 @@ void Convolution<T>::setOffsetX(uint32 pOffsetX){
 template <typename T>
 void Convolution<T>::setOffsetY(uint32 pOffsetY){
 	mOffsetY = pOffsetY;
+}
+
+
+template <typename T>
+uint32 Convolution<T>::countOutputImageUnitSize(
+	ImageBatch<T> const& pInputBatch,
+	ImageBatch<T> const& pKernelsBatch) const
+{
+	return 
+		utils::align(
+			convolvedImageSizeX(pInputBatch, pKernelsBatch) * 
+			pInputBatch.getImageChannelsCount() * sizeof(T),
+			pInputBatch.getAlignedImageRowByteSize() * sizeof(T)
+		) * convolvedImageSizeY(pInputBatch, pKernelsBatch);
 }
 
  
