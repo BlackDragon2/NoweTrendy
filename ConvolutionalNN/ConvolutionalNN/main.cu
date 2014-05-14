@@ -42,7 +42,7 @@ void doFloat(
 	std::shared_ptr<cnn::ImageBatch<uchar>>& filtersUchar);
 
 
-int main_old()
+int main()
 {
 	srand((uint32)time(0));
 	
@@ -72,9 +72,8 @@ int main_old()
 	}
 
 	std::vector<std::string> filtersFiles;
-	filtersFiles.push_back("data/test/none.png");
 	filtersFiles.push_back("data/test/blur1.png");
-	filtersFiles.push_back("data/test/sharp1.png");
+	filtersFiles.push_back("data/test/none.png");
 
 	bool color = true;
 
@@ -87,15 +86,73 @@ int main_old()
 
 	cudaSetDevice(cnn::config::Cuda::CUDA_DEVICE_ID);
 
-	cnn::cnetwork::ConvolutionNetwork<uchar, float> network(
-		std::vector<cnn::cnetwork::ConvolutionLayer<uchar>::PtrS>());
+	size_t freeBytes;
+    size_t totalBytes;
+	cudaMemGetInfo(&freeBytes, &totalBytes);
+	std::cerr << freeBytes  << " " << totalBytes << std::endl;
 
+	cnn::cnetwork::ConvolutionNetwork<uchar, float> network;
+
+	cudaDeviceSynchronize();
+	cudaMemGetInfo(&freeBytes, &totalBytes);
+	std::cerr << freeBytes  << " " << totalBytes << std::endl;
+
+	network.addLayer(
+		cnn::gpu::ImageConvolution<uchar>::PtrS(new cnn::gpu::ImageConvolution<uchar>(1, 1)),
+		cnn::gpu::Sampler<uchar>::PtrS(new cnn::gpu::MaxPooling<uchar>(2, 2)),
+		filtersUchar,
+		b);
+	
+	cudaDeviceSynchronize();
+	cudaMemGetInfo(&freeBytes, &totalBytes);
+	std::cerr << freeBytes  << " " << totalBytes << std::endl;
+
+	/*network.addLayer(
+		cnn::gpu::ImageConvolution<uchar>::PtrS(new cnn::gpu::ImageConvolution<uchar>(1, 1)),
+		cnn::gpu::Sampler<uchar>::PtrS(new cnn::gpu::MaxPooling<uchar>(2, 2)),
+		filtersUchar);*/
+	
+	cudaDeviceSynchronize();
+	cudaMemGetInfo(&freeBytes, &totalBytes);
+	std::cerr << freeBytes  << " " << totalBytes << std::endl;
+
+	/*network.addLayer(
+		cnn::gpu::ImageConvolution<uchar>::PtrS(new cnn::gpu::ImageConvolution<uchar>(1, 1)),
+		cnn::gpu::Sampler<uchar>::PtrS(new cnn::gpu::MaxPooling<uchar>(2, 2)),
+		filtersUchar);*/
+	
+	cudaDeviceSynchronize();
+	cudaMemGetInfo(&freeBytes, &totalBytes);
+	std::cerr << freeBytes  << " " << totalBytes << std::endl;
+
+	//network.buildOutputBuffer();
+	
+	cudaDeviceSynchronize();
+	cudaMemGetInfo(&freeBytes, &totalBytes);
+	std::cerr << freeBytes  << " " << totalBytes << std::endl;
+
+
+	network.run();
+	cudaError_t e = cudaDeviceSynchronize();
+	assert(e == cudaSuccess);
+
+	auto midb = network.getLastLayer()->getMiddleBatch();
+	auto outb = network.getLastLayer()->getOutputBatch();
+	network.getOutputBuffer()->loadFromDevice(outb->getBatchDataPtr(), outb->getBatchByteSize());
+	network.getLastLayer()->getMiddleBuffer()->loadFromDevice(midb->getBatchDataPtr(), midb->getBatchByteSize());
+	
+	cv::namedWindow("a");
+	cv::namedWindow("b");
+	cv::imshow("a", outb->retriveAllImagesAsMat(8));
+	cv::imshow("b", midb->retriveAllImagesAsMat(8));
+
+	cv::waitKey();
 	//cnn::cnetwork::ConvolutionLayer<uchar>::PtrS l(new cnn::cnetwork::ConvolutionLayer<uchar>();
 
     return 0;
 }
 
-int main()
+int main2()
 {
 	srand((uint32)time(0));
 	

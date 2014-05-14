@@ -23,7 +23,7 @@ public:
 public:
 	GpuBuffer();
 	GpuBuffer(size_t pBytesCount, size_t pByteAlignment = 32UL);
-	template <typename T> GpuBuffer(size_t pBytesCount, T* pData, size_t pGpuBufferOffset = 0UL, size_t pByteAlignment = 32UL);
+	template <typename T> GpuBuffer(size_t pBytesCount, size_t pByteAlignment, T* pData, size_t pGpuBufferOffset = 0UL);
 	virtual ~GpuBuffer();
 
 
@@ -58,7 +58,7 @@ private:
 
 
 template <typename T> 
-GpuBuffer::GpuBuffer(size_t pBytesCount, T* pData, size_t pGpuBufferOffset, size_t pByteAlignment)
+GpuBuffer::GpuBuffer(size_t pBytesCount, size_t pByteAlignment, T* pData, size_t pGpuBufferOffset)
 :
 	mAddress(nullptr),
 	mByteSize(0UL),

@@ -35,7 +35,7 @@ public:
 	void complex();
 	void simple();
 
-	void operator()();
+	void operator()(); 
 
 
 	gpu::Convolution<T>::PtrS const&	getConvolution()	const;
@@ -99,22 +99,22 @@ ConvolutionLayer<T>::ConvolutionLayer(
 template <typename T>
 void ConvolutionLayer<T>::complex(){
 	mConvolution->compute(
-		mInputBatch,
-		mInputBuffer,
-		mKernelsBatch,
-		mKernelsBuffer,
-		mMiddleBatch,
-		mMiddleBuffer);
+		*mInputBatch,
+		*mInputBuffer,
+		*mKernelsBatch,
+		*mKernelsBuffer,
+		*mMiddleBatch,
+		*mMiddleBuffer);
 }
 
 
 template <typename T>
 void ConvolutionLayer<T>::simple(){
 	mSampler->sample(
-		mMiddleBatch,
-		mMiddleBuffer,
-		mOutputBatch,
-		mOutputBuffer);
+		*mMiddleBatch,
+		*mMiddleBuffer,
+		*mOutputBatch,
+		*mOutputBuffer);
 }
 
 
@@ -122,7 +122,7 @@ template <typename T>
 void ConvolutionLayer<T>::operator()(){
 	complex();
 	simple();
-}
+} 
 
 
 template <typename T>
