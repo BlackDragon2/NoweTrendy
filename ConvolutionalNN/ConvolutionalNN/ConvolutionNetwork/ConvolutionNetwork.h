@@ -15,14 +15,18 @@ class ConvolutionNetwork {
 public:
 	ConvolutionNetwork(
 		std::vector<ConvolutionLayer<Input>::PtrS> const&	pLayers,
-		gpu::GpuBuffer::PtrS const&							pOutputBuffer,
+		gpu::GpuBuffer::PtrS const&							pOutputBuffer	= nullptr,
 		gpu::Converter<Input, Output>::PtrS const&			pConverter		= gpu::Converter<Input, Output>::PtrS(new gpu::Packer<Input, Output>()));
 	virtual ~ConvolutionNetwork();
 
 	virtual void run();
 
+	void setOutputBuffer(gpu::GpuBuffer::PtrS const& pBuffer);
+
 	gpu::GpuBuffer::PtrS const& getOutputBuffer() const;
 	
+	void addLayer(ConvolutionLayer<Input>::PtrS const& pLayer);
+
 	ConvolutionLayer<Input>::PtrS const& getLayer(uint32 pIndex)	const;
 	ConvolutionLayer<Input>::PtrS const& getFirstLayer()			const;
 	ConvolutionLayer<Input>::PtrS const& getLastLayer()				const;
@@ -56,6 +60,12 @@ ConvolutionNetwork<Input, Output>::~ConvolutionNetwork(){
 
 
 template<typename Input, typename Output>
+void ConvolutionNetwork<Input, Output>::setOutputBuffer(gpu::GpuBuffer::PtrS const& pBuffer){
+	mOutputBuffer = pBuffer;
+}
+
+
+template<typename Input, typename Output>
 void ConvolutionNetwork<Input, Output>::run(){
 	for (ConvolutionLayer<Input> const& layer : mLayers){
 		(*layer)();
@@ -74,6 +84,12 @@ gpu::GpuBuffer::PtrS const& ConvolutionNetwork<Input, Output>::getOutputBuffer()
 	return mOutputBuffer == nullptr ? 
 		mLayers[mLayers.size() - 1]->getOutputBuffer() :
 		mOutputBuffer;
+}
+
+
+template<typename Input, typename Output>
+void ConvolutionNetwork<Input, Output>::addLayer(ConvolutionLayer<Input>::PtrS const& pLayer){
+	mLayers.push_back(pLayer);
 }
 
 

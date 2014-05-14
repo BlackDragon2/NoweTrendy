@@ -41,6 +41,60 @@ void doFloat(
 	std::shared_ptr<cnn::ImageBatch<uchar>>& b, 
 	std::shared_ptr<cnn::ImageBatch<uchar>>& filtersUchar);
 
+
+int main_old()
+{
+	srand((uint32)time(0));
+	
+	__int64 freq;
+	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
+	double spc = 1.0 / freq;
+
+	/*
+	std::string names[] = {
+		"9336923", "9338535", "anpage", "asamma", "asewil",
+		"astefa", "drbost", "ekavaz", "elduns", "kaknig", 
+		"klclar", "ksunth", "lfso", "mbutle", "phughe", 
+		"sbains", "slbirc", "vstros", "yfhsie"};
+	*/
+	std::string names[] = {"slbirc"};
+	size_t nsize = ARRAYSIZE(names);
+
+	std::vector<std::string> files;
+	for(size_t a=0UL; a<1UL; ++a){
+		for(size_t n=0UL; n<nsize; ++n){
+			for(size_t i=1UL; i<=8; ++i){
+				std::stringstream path;
+				path << "data/" << names[n] << "/" << names[n] << "." << (i * 2) << ".jpg";
+				files.push_back(path.str());
+			}
+		}
+	}
+
+	std::vector<std::string> filtersFiles;
+	filtersFiles.push_back("data/test/none.png");
+	filtersFiles.push_back("data/test/blur1.png");
+	filtersFiles.push_back("data/test/sharp1.png");
+
+	bool color = true;
+
+	// Load images
+	std::shared_ptr<cnn::ImageBatch<uchar>> b = cnn::ImageBatch<uchar>::fromFiles(files, color);
+	std::shared_ptr<cnn::ImageBatch<uchar>> filtersUchar = cnn::ImageBatch<uchar>::fromFiles(filtersFiles, color);
+
+	cudaDeviceProp prop0;
+	cudaGetDeviceProperties(&prop0, 0);
+
+	cudaSetDevice(cnn::config::Cuda::CUDA_DEVICE_ID);
+
+	cnn::cnetwork::ConvolutionNetwork<uchar, float> network(
+		std::vector<cnn::cnetwork::ConvolutionLayer<uchar>::PtrS>());
+
+	//cnn::cnetwork::ConvolutionLayer<uchar>::PtrS l(new cnn::cnetwork::ConvolutionLayer<uchar>();
+
+    return 0;
+}
+
 int main()
 {
 	srand((uint32)time(0));
