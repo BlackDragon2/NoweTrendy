@@ -5,12 +5,11 @@
 #include "device_launch_parameters.h"
 #include "device_functions.h"
 #include "cuda.h"
+#include "../GPU/CudaUtils.cuh"
 #include "../Types.h"
 
 namespace cnn{
 	namespace cuda{
-
-__device__ float add(float* address, float value);
 
 template<typename T>
 __global__ void calculatePotential(T* input, float* weights, float* output, uint32 inputLength, uint32 neuronsNr)
@@ -26,8 +25,8 @@ __global__ void calculatePotential(T* input, float* weights, float* output, uint
 
 __global__ void calculateSigmoidalOutput(float* output, uint32 neuronsNr, float* weights, float* biases);
 __global__ void calculateTanhOutput(float* output, uint32 neuronsNr, float* weights, float* biases);
-__global__ void calculateSigmoidalDelta(float* output, uint32 neuronsNr, float* errorRates, float* weights);
-__global__ void calculateTahnDelta(float* output, uint32 neuronsNr, float* errorRates, float* weights);
+__global__ void calculateSigmoidalDelta(float* output, uint32 neuronsNr, uint32 weightsLength, float* errorRates);//dla wag miedzy warstwa i a j - output warstwy i, neuronsNr i weightsLength warstwy j
+__global__ void calculateTahnDelta(float* output, uint32 neuronsNr, uint32 weightsLength, float* errorRates);//dla wag miedzy warstwa i a j - output warstwy i, neuronsNr i weightsLength warstwy j
 
 	}}
 

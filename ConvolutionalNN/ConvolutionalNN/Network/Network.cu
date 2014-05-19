@@ -30,3 +30,16 @@ void cnn::nn::Network::setClasses(std::string* classes, uint32 classesNr)
 	for(uint32 i=0;i<classesNr;i++)
 		this->classes.push_back(classes[i]);
 }
+
+uint32 cnn::nn::Network::findMax(float* tab, uint32 neuronsNr)
+{
+	uint32 indMax=0;
+	float valMax=tab[0];
+	for(int i=1;i<neuronsNr;i++)
+		if(valMax<tab[i])
+		{
+			valMax=tab[i];
+			indMax=i;
+		}
+	return indMax;
+}

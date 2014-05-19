@@ -25,6 +25,10 @@ public:
 
 	template<typename T> 
 	void calculateOutput(T* input);
+	
+	float* getOutput();
+	cnn::gpu::GpuBuffer* getOutputBuffer();
+	uint32 getNeuronsNr();
 
 private:
 	uint32 neuronsNr;

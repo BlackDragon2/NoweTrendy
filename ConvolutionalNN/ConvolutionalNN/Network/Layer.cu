@@ -34,3 +34,18 @@ cnn::nn::Layer::~Layer(void)
 	weightsDev.free();
 	weightsUpdateDev.free();
 }
+
+float* cnn::nn::Layer::getOutput()
+{
+	return output;
+}
+
+cnn::gpu::GpuBuffer* cnn::nn::Layer::getOutputBuffer()
+{
+	return &outputDev;
+}
+
+uint32 cnn::nn::Layer::getNeuronsNr()
+{
+	return neuronsNr;
+}

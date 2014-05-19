@@ -101,6 +101,9 @@
     <CudaCompile Include="Network\LayerCuda.cu">
       <Filter>Sources\Network</Filter>
     </CudaCompile>
+    <CudaCompile Include="GPU\CudaUtils.cu">
+      <Filter>Sources\GPU</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Utils\FoldsFactory.cpp">
@@ -133,6 +136,12 @@
       <Filter>Headers\Network</Filter>
     </None>
     <None Include="GPU\Packer.cuh">
+      <Filter>Headers\GPU</Filter>
+    </None>
+    <None Include="Network\NetworkCuda.cuh">
+      <Filter>Headers\Network</Filter>
+    </None>
+    <None Include="GPU\CudaUtils.cuh">
       <Filter>Headers\GPU</Filter>
     </None>
   </ItemGroup>
