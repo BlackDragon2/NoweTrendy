@@ -86,12 +86,14 @@ __global__ void samplerMaxPooling(
 	if(idx >= threadsPerImage * gp.imagesCount)
 		return;
 
-	uint32 myImg	= idx / threadsPerImage;
-	uint32 myColumn	= threadsPerImage % gp.threadsPerRow;			
-	uint32 myRow	= threadsPerImage / gp.threadsPerRow;
+	uint32 myImg		= idx / threadsPerImage;
+	uint32 imgThread	= idx % threadsPerImage;
 
-	uint32 skipX = gp.sampleWidth * gp.imageChannels;
-	uint32 skipY = gp.sampleHeight * ip.alignedImageRowUnitSize;
+	uint32 myColumn		= imgThread % gp.threadsPerRow;			
+	uint32 myRow		= imgThread / gp.threadsPerRow;
+
+	uint32 skipX		= gp.sampleWidth * gp.imageChannels;
+	uint32 skipY		= gp.sampleHeight * ip.alignedImageRowUnitSize;
 
 	T* myImageRect = ip.buffer + myImg * ip.alignedImageUnitSize + 
 		myRow * skipY + myColumn * skipX;
@@ -113,8 +115,8 @@ __global__ void samplerMaxPooling(
 		}
 	}
 
-	for(uint32 ch=0U; ch<gp.sampleWidth; ++ch){
-		myOutputPixel[ch] = (ch + 1) * 32;//maximes[ch];
+	for(uint32 ch=0U; ch<gp.imageChannels; ++ch){
+		myOutputPixel[ch] = maximes[ch];
 	}
 }
 

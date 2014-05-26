@@ -42,14 +42,14 @@ void doFloat(
 	std::shared_ptr<cnn::ImageBatch<uchar>>& filtersUchar);
 
 
-int main2()
+int main()
 {
 	srand((uint32)time(0));
 	
 	__int64 freq;
 	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
 	double spc = 1.0 / freq;
-
+	 
 	/*
 	std::string names[] = {
 		"9336923", "9338535", "anpage", "asamma", "asewil",
@@ -107,19 +107,19 @@ int main2()
 	cudaMemGetInfo(&freeBytes, &totalBytes);
 	std::cerr << freeBytes  << " " << totalBytes << std::endl;
 
-	/*network.addLayer(
+	network.addLayer(
 		cnn::gpu::ImageConvolution<uchar>::PtrS(new cnn::gpu::ImageConvolution<uchar>(1, 1)),
 		cnn::gpu::Sampler<uchar>::PtrS(new cnn::gpu::MaxPooling<uchar>(2, 2)),
-		filtersUchar);*/
+		filtersUchar);
 	
 	cudaDeviceSynchronize();
 	cudaMemGetInfo(&freeBytes, &totalBytes);
 	std::cerr << freeBytes  << " " << totalBytes << std::endl;
 
-	/*network.addLayer(
+	network.addLayer(
 		cnn::gpu::ImageConvolution<uchar>::PtrS(new cnn::gpu::ImageConvolution<uchar>(1, 1)),
 		cnn::gpu::Sampler<uchar>::PtrS(new cnn::gpu::MaxPooling<uchar>(2, 2)),
-		filtersUchar);*/
+		filtersUchar);
 	
 	cudaDeviceSynchronize();
 	cudaMemGetInfo(&freeBytes, &totalBytes);
@@ -165,14 +165,14 @@ int main2()
 
 		// uchar jest typem przykladowym, moze byc float np.
 		// Jakos tak to powinno byc... Jeszcze musze max pooling zdebugowac jakby co.
-	}
+	} 
 
 	network.run();
 	cudaError_t e = cudaDeviceSynchronize();
 	assert(e == cudaSuccess);
 
-	auto midb = network.getLastLayer()->getMiddleBatch();
-	auto outb = network.getLastLayer()->getOutputBatch();
+	auto const& midb = network.getLastLayer()->getMiddleBatch();
+	auto const& outb = network.getLastLayer()->getOutputBatch();
 	network.getOutputBuffer()->loadFromDevice(outb->getBatchDataPtr(), outb->getBatchByteSize());
 	network.getLastLayer()->getMiddleBuffer()->loadFromDevice(midb->getBatchDataPtr(), midb->getBatchByteSize());
 	
@@ -187,7 +187,7 @@ int main2()
     return 0;
 }
 
-int main()
+int main2()
 {
 	srand((uint32)time(0));
 	
