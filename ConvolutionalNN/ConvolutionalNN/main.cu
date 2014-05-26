@@ -142,7 +142,7 @@ int main2()
 		cnn::ImageBatch<uchar>::PtrS	prePoolingBatch		= network.getLayer(layerIndex)->getMiddleBatch();
 
 		// offset dla adresu bufora, jak dodasz tê wartoœæ do adresu bufora to powinieneœ znaleŸæ siê pod pierwszym kana³em, pod pierwszym pixelem zdjêcia
-		uint32 imageDataAddressOffset = prePoolingBatch->getAlignedImageByteSize() * prePoolingImageIndex;
+		uint32 imageDataAddressOffset = (prePoolingBatch->getAlignedImageByteSize() / sizeof(uchar)) * prePoolingImageIndex;
 
 		// wysokosc i szerokosc samplera, potrzebne przy wyliczeniu offsetu do pixeli, ktore braly udzial w max pooling 
 		uint32 samplerWidth		= network.getLayer(layerIndex)->getSampler()->getWidth();
@@ -158,11 +158,12 @@ int main2()
 		// poczatek danych pierwszego wiersza dla prostokata pixeli, ktore zostaly uzyte w maxpoolingu
 		uint32 firstRowOffset	= toBeginOffset;
 		// poczatek danych drugiego wiersza dla prostokata pixeli, ktore zostaly uzyte w maxpoolingu
-		uint32 secondRowOffset	= toBeginOffset + 1 * prePoolingBatch->getAlignedImageRowByteSize();
+		uint32 secondRowOffset	= toBeginOffset + 1 * (prePoolingBatch->getAlignedImageRowByteSize() / sizeof(uchar));
 		// poczatek danych trzeciego wiersza dla prostokata pixeli, ktore zostaly uzyte w maxpoolingu
-		uint32 thirdRowOffset	= toBeginOffset + 2 * prePoolingBatch->getAlignedImageRowByteSize();
+		uint32 thirdRowOffset	= toBeginOffset + 2 * (prePoolingBatch->getAlignedImageRowByteSize() / sizeof(uchar));
 		// ...
 
+		// uchar jest typem przykladowym, moze byc float np.
 		// Jakos tak to powinno byc... Jeszcze musze max pooling zdebugowac jakby co.
 	}
 
