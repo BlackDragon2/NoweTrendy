@@ -42,7 +42,7 @@ void doFloat(
 	std::shared_ptr<cnn::ImageBatch<uchar>>& filtersUchar);
 
 
-int main()
+int main2()
 {
 	srand((uint32)time(0));
 	
@@ -126,11 +126,45 @@ int main()
 	std::cerr << freeBytes  << " " << totalBytes << std::endl;
 
 	//network.buildOutputBuffer();
+	//return;
 	
 	cudaDeviceSynchronize();
 	cudaMemGetInfo(&freeBytes, &totalBytes);
 	std::cerr << freeBytes  << " " << totalBytes << std::endl;
 
+	// HOWTO
+	if (false)
+	{
+		uint32 layerIndex, prePoolingImageIndex;
+		// bufor na gpu z danymi sprzed poolingu
+		cnn::gpu::GpuBuffer::PtrS		prePoolingBuffer	= network.getLayer(layerIndex)->getMiddleBuffer();
+		// batch zawieraj¹cy dane o zdjêciach sprzed poolingu
+		cnn::ImageBatch<uchar>::PtrS	prePoolingBatch		= network.getLayer(layerIndex)->getMiddleBatch();
+
+		// offset dla adresu bufora, jak dodasz tê wartoœæ do adresu bufora to powinieneœ znaleŸæ siê pod pierwszym kana³em, pod pierwszym pixelem zdjêcia
+		uint32 imageDataAddressOffset = prePoolingBatch->getAlignedImageByteSize() * prePoolingImageIndex;
+
+		// wysokosc i szerokosc samplera, potrzebne przy wyliczeniu offsetu do pixeli, ktore braly udzial w max pooling 
+		uint32 samplerWidth		= network.getLayer(layerIndex)->getSampler()->getWidth();
+		uint32 samplerHeight	= network.getLayer(layerIndex)->getSampler()->getHeight();
+
+		// indeksy pixeli dla juz zsamplowanego zdjecia, pod ktore chcesz sie dostac w zdjeciu przed samplowaniem
+		uint32 pixelDimXAfterPooling = 100;
+		uint32 pixelDimYAfterPooling = 100;
+
+		// offset dla adresu, ktory jak dodasz do adresu bufora to znajdziesz siê pod pierwszym kana³em, pod pierwszym pixelem prostok¹ta u¿ytego w max poolingu
+		uint32 toBeginOffset = imageDataAddressOffset + pixelDimXAfterPooling * samplerWidth * prePoolingBatch->getImageChannelsCount();
+
+		// poczatek danych pierwszego wiersza dla prostokata pixeli, ktore zostaly uzyte w maxpoolingu
+		uint32 firstRowOffset	= toBeginOffset;
+		// poczatek danych drugiego wiersza dla prostokata pixeli, ktore zostaly uzyte w maxpoolingu
+		uint32 secondRowOffset	= toBeginOffset + 1 * prePoolingBatch->getAlignedImageRowByteSize();
+		// poczatek danych trzeciego wiersza dla prostokata pixeli, ktore zostaly uzyte w maxpoolingu
+		uint32 thirdRowOffset	= toBeginOffset + 2 * prePoolingBatch->getAlignedImageRowByteSize();
+		// ...
+
+		// Jakos tak to powinno byc... Jeszcze musze max pooling zdebugowac jakby co.
+	}
 
 	network.run();
 	cudaError_t e = cudaDeviceSynchronize();
@@ -152,7 +186,7 @@ int main()
     return 0;
 }
 
-int main2()
+int main()
 {
 	srand((uint32)time(0));
 	

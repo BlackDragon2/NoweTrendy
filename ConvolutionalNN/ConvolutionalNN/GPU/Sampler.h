@@ -109,11 +109,13 @@ void Sampler<T>::setHeight(uint32 pHeight){
 
 template <typename T>
 uint32 Sampler<T>::countOutputImageUnitSize(ImageBatch<T> const& pInputImageBatch) const {
+	uint32 sx = sampledImageSizeX(pInputImageBatch);
+	uint32 al = pInputImageBatch.getImageRowByteAligment();
 	return 
 		utils::align(
-			sampledImageSizeX(pInputImageBatch) * 
+			sx * 
 			pInputImageBatch.getImageChannelsCount() * sizeof(T), 
-			pInputImageBatch.getImageRowByteAligment() * sizeof(T)
+			al * sizeof(T)
 		) * sampledImageSizeY(pInputImageBatch);
 }
 
