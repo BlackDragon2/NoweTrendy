@@ -156,8 +156,8 @@ void ConvolutionNetwork<Input, Output>::addLayer(
 	// batches
 	typename ImageBatch<Input>::PtrS middleBatch(
 		new ImageBatch<Input>(
-			pConvolution->convolvedImageSizeX(*inputBatch, *pKernelsBatch),
-			pConvolution->convolvedImageSizeY(*inputBatch, *pKernelsBatch),
+			pConvolution->convolvedImageWidth(*inputBatch, *pKernelsBatch),
+			pConvolution->convolvedImageHeight(*inputBatch, *pKernelsBatch),
 			inputBatch->getImageChannelsCount(),
 			inputBatch->getImageRowByteAligment()));
 	middleBatch->allocateSpaceForImages(
@@ -165,8 +165,8 @@ void ConvolutionNetwork<Input, Output>::addLayer(
 
 	typename ImageBatch<Input>::PtrS outputBatch(
 		new ImageBatch<Input>(
-			pSampler->sampledImageSizeX(*middleBatch),
-			pSampler->sampledImageSizeY(*middleBatch),
+			pSampler->sampledImageWidth(*middleBatch),
+			pSampler->sampledImageHeight(*middleBatch),
 			inputBatch->getImageChannelsCount(),
 			inputBatch->getImageRowByteAligment()));
 	outputBatch->allocateSpaceForImages(middleBatch->getImagesCount(), true);

@@ -64,10 +64,10 @@ public:
 		GpuBuffer&				pOutputImageBuffer);
 
 	
-	virtual uint32 convolvedImageSizeX(
+	virtual uint32 convolvedImageWidth(
 		ImageBatch<T> const& pInputBatch,
 		ImageBatch<T> const& pKernelsBatch) const;
-	virtual uint32 convolvedImageSizeY(
+	virtual uint32 convolvedImageHeight(
 		ImageBatch<T> const& pInputBatch,
 		ImageBatch<T> const& pKernelsBatch) const;
 };
@@ -219,8 +219,8 @@ void ImageConvolution<T>::compute(
 	ImageBatch<T> const&	pOutputImageBatch,
 	GpuBuffer&				pOutputImageBuffer)
 {
-	size_t kernelRunsPerRow		= convolvedImageSizeX(pInputImageBatch, pKernelsImageBatch); 
-	size_t kernelRunsPerCol		= convolvedImageSizeY(pInputImageBatch, pKernelsImageBatch);
+	size_t kernelRunsPerRow		= convolvedImageWidth(pInputImageBatch, pKernelsImageBatch); 
+	size_t kernelRunsPerCol		= convolvedImageHeight(pInputImageBatch, pKernelsImageBatch);
 	size_t kernelRunsPerImage	= kernelRunsPerRow * kernelRunsPerCol;
 
 	size_t blocks = utils::blocksCount(kernelRunsPerImage * pInputImageBatch.getImagesCount() * pKernelsImageBatch.getImagesCount(), config::Cuda::THREADS_PER_BLOCK);
@@ -257,7 +257,7 @@ void ImageConvolution<T>::compute(
 
 
 template <typename T>
-uint32 ImageConvolution<T>::convolvedImageSizeX(
+uint32 ImageConvolution<T>::convolvedImageWidth(
 	ImageBatch<T> const& pInputBatch,
 	ImageBatch<T> const& pKernelsBatch) const 
 {
@@ -266,7 +266,7 @@ uint32 ImageConvolution<T>::convolvedImageSizeX(
 
 
 template <typename T>
-uint32 ImageConvolution<T>::convolvedImageSizeY(
+uint32 ImageConvolution<T>::convolvedImageHeight(
 	ImageBatch<T> const& pInputBatch,
 	ImageBatch<T> const& pKernelsBatch) const 
 {

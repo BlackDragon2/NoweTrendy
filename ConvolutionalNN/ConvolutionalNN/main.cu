@@ -186,10 +186,10 @@ int main()
 		std::stringstream s2;
 
 		s1 << "in batch layer " << i;
-		s2 << "mid batch layer " << i;
+		s2 << "mid batch layer " << i;  
 
 		cv::namedWindow(s1.str());
-		cv::namedWindow(s2.str());
+		cv::namedWindow(s2.str());      
 		cv::imshow(s1.str(), inputBat->retriveAllImagesAsMat(8));
 		cv::imshow(s2.str(), middleBat->retriveAllImagesAsMat(8));
 	}
@@ -301,10 +301,10 @@ void doUchar(
 		cnn::gpu::GpuBuffer bKernels;
 		bKernels.allocate(pKernels->getBatchByteSize());
 		bKernels.writeToDevice(pKernels->getBatchDataPtr(), pKernels->getBatchByteSize());
-		
+		  
 		cnn::gpu::ImageConvolution<uchar> sc(1, 1);
-		uint32 cx = sc.convolvedImageSizeX(*pImages, *pKernels);
-		uint32 cy = sc.convolvedImageSizeY(*pImages, *pKernels);
+		uint32 cx = sc.convolvedImageWidth(*pImages, *pKernels);
+		uint32 cy = sc.convolvedImageHeight(*pImages, *pKernels);
 		cnn::ImageBatch<uchar> filtered(cx, cy, pImages->getImageChannelsCount());
 		filtered.allocateSpaceForImages(pImages->getImagesCount() * pKernels->getImagesCount(), true);
 

@@ -14,26 +14,18 @@ namespace cnn {
 template <typename T>
 class MaxPooling : public Sampler<T> {
 public:
-	struct InputImageParams {
+	struct ImageParams {
 		T*		buffer;
 		size_t	imageWidth;
 		size_t	imageHeight;
 		size_t	alignedImageUnitSize;
 		size_t	alignedImageRowUnitSize;
-	};
-
-	struct OutputImageParams {
-		T*		buffer;
-		size_t	alignedImageUnitSize;
-		size_t	alignedImageRowUnitSize;
-	};
+	}; 
 
 	struct GeneralParams {
 		size_t	imagesCount;
 		size_t	sampleWidth;
-		size_t	sampleHeight;
-		size_t	threadsPerRow;
-		size_t	threadsPerCol;
+		size_t	sampleHeight; 
 		size_t	imageChannels;
 	};
 
@@ -48,8 +40,8 @@ public:
 		GpuBuffer&				pOutputBuffer);
 	 
 
-	virtual uint32 sampledImageSizeX(ImageBatch<T> const& pInputBatch) const;
-	virtual uint32 sampledImageSizeY(ImageBatch<T> const& pInputBatch) const;
+	virtual uint32 sampledImageWidth(ImageBatch<T> const& pInputBatch) const;
+	virtual uint32 sampledImageHeight(ImageBatch<T> const& pInputBatch) const;
 };
 
 
@@ -72,16 +64,16 @@ MaxPooling<T>::~MaxPooling(){
 
 template <typename T>
 __global__ void samplerMaxPooling(
-	typename MaxPooling<T>::InputImageParams	pInputImageParams,
-	typename MaxPooling<T>::OutputImageParams	pOutputImageParams,
-	typename MaxPooling<T>::GeneralParams		pGeneralParams)
+	typename MaxPooling<T>::ImageParams		pInputImageParams,
+	typename MaxPooling<T>::ImageParams		pOutputImageParams,
+	typename MaxPooling<T>::GeneralParams	pGeneralParams)
 {
-	typename MaxPooling<T>::InputImageParams&	ip = pInputImageParams;
-	typename MaxPooling<T>::OutputImageParams&	op = pOutputImageParams;
-	typename MaxPooling<T>::GeneralParams&		gp = pGeneralParams;
+	typename MaxPooling<T>::ImageParams&	ip = pInputImageParams;
+	typename MaxPooling<T>::ImageParams&	op = pOutputImageParams;
+	typename MaxPooling<T>::GeneralParams&	gp = pGeneralParams;
 
 	uint32 idx				= ((blockIdx.x * blockDim.x) + threadIdx.x);
-	uint32 threadsPerImage	= gp.threadsPerRow * gp.threadsPerCol;
+	uint32 threadsPerImage	= op.imageWidth * op.imageHeight;
 
 	if(idx >= threadsPerImage * gp.imagesCount)
 		return;
@@ -89,8 +81,8 @@ __global__ void samplerMaxPooling(
 	uint32 myImg		= idx / threadsPerImage;
 	uint32 imgThread	= idx % threadsPerImage;
 
-	uint32 myColumn		= imgThread % gp.threadsPerRow;			
-	uint32 myRow		= imgThread / gp.threadsPerRow;
+	uint32 myColumn		= imgThread % op.imageWidth;			
+	uint32 myRow		= imgThread / op.imageWidth;
 
 	uint32 skipX		= gp.sampleWidth * gp.imageChannels;
 	uint32 skipY		= gp.sampleHeight * ip.alignedImageRowUnitSize;
@@ -128,19 +120,21 @@ void MaxPooling<T>::sample(
 	ImageBatch<T> const&	pOutputImageBatch,
 	GpuBuffer&				pOutputBuffer)
 {
-	size_t rowThreads		= sampledImageSizeY(pInputImageBatch);
-	size_t colThreads		= sampledImageSizeX(pInputImageBatch);
+	size_t rowThreads		= sampledImageWidth(pInputImageBatch);
+	size_t colThreads		= sampledImageHeight(pInputImageBatch);
 	size_t blocks			= utils::blocksCount(rowThreads * colThreads * pInputImageBatch.getImagesCount(), config::Cuda::THREADS_PER_BLOCK);
 
-	InputImageParams ip;
+	ImageParams ip;
 	ip.buffer					= pInputBuffer.getDataPtr<T>();
 	ip.imageWidth				= pInputImageBatch.getImageWidth();
 	ip.imageHeight				= pInputImageBatch.getImageHeight();
 	ip.alignedImageUnitSize		= pInputImageBatch.getAlignedImageByteSize() / sizeof(T);
 	ip.alignedImageRowUnitSize	= pInputImageBatch.getAlignedImageRowByteSize() / sizeof(T);
 
-	OutputImageParams op;
+	ImageParams op;
 	op.buffer					= pOutputBuffer.getDataPtr<T>();
+	op.imageWidth				= rowThreads;
+	op.imageHeight				= colThreads;
 	op.alignedImageUnitSize		= pOutputImageBatch.getAlignedImageByteSize() / sizeof(T);
 	op.alignedImageRowUnitSize	= pOutputImageBatch.getAlignedImageRowByteSize() / sizeof(T);
 
@@ -148,8 +142,6 @@ void MaxPooling<T>::sample(
 	gp.imagesCount		= pInputImageBatch.getImagesCount();
 	gp.sampleWidth		= getWidth();
 	gp.sampleHeight		= getHeight();
-	gp.threadsPerRow	= rowThreads;
-	gp.threadsPerCol	= colThreads;
 	gp.imageChannels	= pInputImageBatch.getImageChannelsCount();
 
 	samplerMaxPooling<T><<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(ip, op, gp);
@@ -157,13 +149,13 @@ void MaxPooling<T>::sample(
 
 
 template <typename T>
-uint32 MaxPooling<T>::sampledImageSizeX(ImageBatch<T> const& pImageBatch) const {
+uint32 MaxPooling<T>::sampledImageWidth(ImageBatch<T> const& pImageBatch) const {
 	return static_cast<uint32>(std::ceil(static_cast<double>(pImageBatch.getImageWidth()) / getWidth()));
 }
 
 
 template <typename T>
-uint32 MaxPooling<T>::sampledImageSizeY(ImageBatch<T> const& pImageBatch) const {
+uint32 MaxPooling<T>::sampledImageHeight(ImageBatch<T> const& pImageBatch) const {
 	return static_cast<uint32>(std::ceil(static_cast<double>(pImageBatch.getImageHeight()) / getHeight()));
 }
 
