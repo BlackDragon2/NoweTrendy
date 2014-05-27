@@ -171,18 +171,37 @@ int main()
 	cudaError_t e = cudaDeviceSynchronize();
 	assert(e == cudaSuccess);
 
-	auto const& midb = network.getLastLayer()->getMiddleBatch();
-	auto const& outb = network.getLastLayer()->getOutputBatch();
-	network.getOutputBuffer()->loadFromDevice(outb->getBatchDataPtr(), outb->getBatchByteSize());
-	network.getLastLayer()->getMiddleBuffer()->loadFromDevice(midb->getBatchDataPtr(), midb->getBatchByteSize());
+	for (size_t i = 0; i < 3; ++i)
+	{
+		auto const& inputBuf	= network.getLayer(i)->getInputBuffer();
+		auto const& middleBuf	= network.getLayer(i)->getMiddleBuffer();
+		
+		auto const& inputBat	= network.getLayer(i)->getInputBatch();
+		auto const& middleBat	= network.getLayer(i)->getMiddleBatch();
 	
-	cv::namedWindow("a");
-	cv::namedWindow("b");
-	cv::imshow("a", outb->retriveAllImagesAsMat(8));
-	cv::imshow("b", midb->retriveAllImagesAsMat(8));
+		inputBuf->loadFromDevice(inputBat->getBatchDataPtr(), inputBat->getBatchByteSize());
+		middleBuf->loadFromDevice(middleBat->getBatchDataPtr(), middleBat->getBatchByteSize());
+		
+		std::stringstream s1;
+		std::stringstream s2;
+
+		s1 << "in batch layer " << i;
+		s2 << "mid batch layer " << i;
+
+		cv::namedWindow(s1.str());
+		cv::namedWindow(s2.str());
+		cv::imshow(s1.str(), inputBat->retriveAllImagesAsMat(8));
+		cv::imshow(s2.str(), middleBat->retriveAllImagesAsMat(8));
+	}
+
+
+	auto const& outputBatch = network.getLastLayer()->getOutputBatch();
+	network.getOutputBuffer()->loadFromDevice(outputBatch->getBatchDataPtr(), outputBatch->getBatchByteSize());
+	
+	cv::namedWindow("output");
+	cv::imshow("output", outputBatch->retriveAllImagesAsMat(8));
 
 	cv::waitKey();
-	//cnn::cnetwork::ConvolutionLayer<uchar>::PtrS l(new cnn::cnetwork::ConvolutionLayer<uchar>();
 
     return 0;
 }
