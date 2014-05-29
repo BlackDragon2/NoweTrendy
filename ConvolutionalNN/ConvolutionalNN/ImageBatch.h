@@ -89,6 +89,11 @@ public:
 
 
 private:
+	ImageBatch(ImageBatch const& pImageBatch);
+	ImageBatch& operator=(ImageBatch const& pImageBatch); 
+
+
+private:
 	std::shared_ptr<std::vector<T>> mData;
 	size_t							mImagesCount;
 

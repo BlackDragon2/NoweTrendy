@@ -49,7 +49,7 @@ int main()
 	__int64 freq;
 	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
 	double spc = 1.0 / freq;
-
+	 
 	/*
 	std::string names[] = {
 		"9336923", "9338535", "anpage", "asamma", "asewil",
@@ -107,47 +107,101 @@ int main()
 	cudaMemGetInfo(&freeBytes, &totalBytes);
 	std::cerr << freeBytes  << " " << totalBytes << std::endl;
 
-	/*network.addLayer(
+	network.addLayer(
 		cnn::gpu::ImageConvolution<uchar>::PtrS(new cnn::gpu::ImageConvolution<uchar>(1, 1)),
 		cnn::gpu::Sampler<uchar>::PtrS(new cnn::gpu::MaxPooling<uchar>(2, 2)),
-		filtersUchar);*/
+		filtersUchar);
 	
 	cudaDeviceSynchronize();
 	cudaMemGetInfo(&freeBytes, &totalBytes);
 	std::cerr << freeBytes  << " " << totalBytes << std::endl;
 
-	/*network.addLayer(
+	network.addLayer(
 		cnn::gpu::ImageConvolution<uchar>::PtrS(new cnn::gpu::ImageConvolution<uchar>(1, 1)),
 		cnn::gpu::Sampler<uchar>::PtrS(new cnn::gpu::MaxPooling<uchar>(2, 2)),
-		filtersUchar);*/
+		filtersUchar);
 	
 	cudaDeviceSynchronize();
 	cudaMemGetInfo(&freeBytes, &totalBytes);
 	std::cerr << freeBytes  << " " << totalBytes << std::endl;
 
 	//network.buildOutputBuffer();
+	//return;
 	
 	cudaDeviceSynchronize();
 	cudaMemGetInfo(&freeBytes, &totalBytes);
 	std::cerr << freeBytes  << " " << totalBytes << std::endl;
 
+	// HOWTO
+	if (false)
+	{
+		uint32 layerIndex, prePoolingImageIndex;
+		// bufor na gpu z danymi sprzed poolingu
+		cnn::gpu::GpuBuffer::PtrS		prePoolingBuffer	= network.getLayer(layerIndex)->getMiddleBuffer();
+		// batch zawieraj¹cy dane o zdjêciach sprzed poolingu
+		cnn::ImageBatch<uchar>::PtrS	prePoolingBatch		= network.getLayer(layerIndex)->getMiddleBatch();
+
+		// offset dla adresu bufora, jak dodasz tê wartoœæ do adresu bufora to powinieneœ znaleŸæ siê pod pierwszym kana³em, pod pierwszym pixelem zdjêcia
+		uint32 imageDataAddressOffset = (prePoolingBatch->getAlignedImageByteSize() / sizeof(uchar)) * prePoolingImageIndex;
+
+		// wysokosc i szerokosc samplera, potrzebne przy wyliczeniu offsetu do pixeli, ktore braly udzial w max pooling 
+		uint32 samplerWidth		= network.getLayer(layerIndex)->getSampler()->getWidth();
+		uint32 samplerHeight	= network.getLayer(layerIndex)->getSampler()->getHeight();
+
+		// indeksy pixeli dla juz zsamplowanego zdjecia, pod ktore chcesz sie dostac w zdjeciu przed samplowaniem
+		uint32 pixelDimXAfterPooling = 100;
+		uint32 pixelDimYAfterPooling = 100;
+
+		// offset dla adresu, ktory jak dodasz do adresu bufora to znajdziesz siê pod pierwszym kana³em, pod pierwszym pixelem prostok¹ta u¿ytego w max poolingu
+		uint32 toBeginOffset = imageDataAddressOffset + pixelDimXAfterPooling * samplerWidth * prePoolingBatch->getImageChannelsCount();
+
+		// poczatek danych pierwszego wiersza dla prostokata pixeli, ktore zostaly uzyte w maxpoolingu
+		uint32 firstRowOffset	= toBeginOffset;
+		// poczatek danych drugiego wiersza dla prostokata pixeli, ktore zostaly uzyte w maxpoolingu
+		uint32 secondRowOffset	= toBeginOffset + 1 * (prePoolingBatch->getAlignedImageRowByteSize() / sizeof(uchar));
+		// poczatek danych trzeciego wiersza dla prostokata pixeli, ktore zostaly uzyte w maxpoolingu
+		uint32 thirdRowOffset	= toBeginOffset + 2 * (prePoolingBatch->getAlignedImageRowByteSize() / sizeof(uchar));
+		// ...
+
+		// uchar jest typem przykladowym, moze byc float np.
+		// Jakos tak to powinno byc... Jeszcze musze max pooling zdebugowac jakby co.
+	} 
 
 	network.run();
 	cudaError_t e = cudaDeviceSynchronize();
 	assert(e == cudaSuccess);
 
-	auto midb = network.getLastLayer()->getMiddleBatch();
-	auto outb = network.getLastLayer()->getOutputBatch();
-	network.getOutputBuffer()->loadFromDevice(outb->getBatchDataPtr(), outb->getBatchByteSize());
-	network.getLastLayer()->getMiddleBuffer()->loadFromDevice(midb->getBatchDataPtr(), midb->getBatchByteSize());
+	for (size_t i = 0; i < 3; ++i)
+	{
+		auto const& inputBuf	= network.getLayer(i)->getInputBuffer();
+		auto const& middleBuf	= network.getLayer(i)->getMiddleBuffer();
+		
+		auto const& inputBat	= network.getLayer(i)->getInputBatch();
+		auto const& middleBat	= network.getLayer(i)->getMiddleBatch();
 	
-	cv::namedWindow("a");
-	cv::namedWindow("b");
-	cv::imshow("a", outb->retriveAllImagesAsMat(8));
-	cv::imshow("b", midb->retriveAllImagesAsMat(8));
+		inputBuf->loadFromDevice(inputBat->getBatchDataPtr(), inputBat->getBatchByteSize());
+		middleBuf->loadFromDevice(middleBat->getBatchDataPtr(), middleBat->getBatchByteSize());
+		
+		std::stringstream s1;
+		std::stringstream s2;
+
+		s1 << "in batch layer " << i;
+		s2 << "mid batch layer " << i;  
+
+		cv::namedWindow(s1.str());
+		cv::namedWindow(s2.str());      
+		cv::imshow(s1.str(), inputBat->retriveAllImagesAsMat(8));
+		cv::imshow(s2.str(), middleBat->retriveAllImagesAsMat(8));
+	}
+
+
+	auto const& outputBatch = network.getLastLayer()->getOutputBatch();
+	network.getOutputBuffer()->loadFromDevice(outputBatch->getBatchDataPtr(), outputBatch->getBatchByteSize());
+	
+	cv::namedWindow("output");
+	cv::imshow("output", outputBatch->retriveAllImagesAsMat(8));
 
 	cv::waitKey();
-	//cnn::cnetwork::ConvolutionLayer<uchar>::PtrS l(new cnn::cnetwork::ConvolutionLayer<uchar>();
 
     return 0;
 }
@@ -247,10 +301,10 @@ void doUchar(
 		cnn::gpu::GpuBuffer bKernels;
 		bKernels.allocate(pKernels->getBatchByteSize());
 		bKernels.writeToDevice(pKernels->getBatchDataPtr(), pKernels->getBatchByteSize());
-		
+		  
 		cnn::gpu::ImageConvolution<uchar> sc(1, 1);
-		uint32 cx = sc.convolvedImageSizeX(*pImages, *pKernels);
-		uint32 cy = sc.convolvedImageSizeY(*pImages, *pKernels);
+		uint32 cx = sc.convolvedImageWidth(*pImages, *pKernels);
+		uint32 cy = sc.convolvedImageHeight(*pImages, *pKernels);
 		cnn::ImageBatch<uchar> filtered(cx, cy, pImages->getImageChannelsCount());
 		filtered.allocateSpaceForImages(pImages->getImagesCount() * pKernels->getImagesCount(), true);
 

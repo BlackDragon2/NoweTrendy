@@ -92,11 +92,11 @@ void ConvolutionNetwork<Input, Output>::initialize(uint32 pLayers){
 
 template<typename Input, typename Output>
 void ConvolutionNetwork<Input, Output>::buildOutputBuffer(){
-	float ratio = static_cast<float>(sizeof(Output)) / sizeof(Input);
-	auto const& layer = getLastLayer();
-	mOutputBuffer.reset(new gpu::GpuBuffer(
-		layer->getOutputBatch()->getImageByteSize(),
-		static_cast<size_t>(static_cast<float>(layer->getOutputBatch()->getImageRowByteAligment()) * ratio)));
+	float ratio			= static_cast<float>(sizeof(Output)) / sizeof(Input);
+	auto const& layer	= getLastLayer();
+	uint32 bytes		= layer->getOutputBatch()->getImageByteSize() * layer->getOutputBatch()->getImagesCount() * sizeof(Output);
+	uint32 aligment		= static_cast<size_t>(static_cast<float>(layer->getOutputBatch()->getImageRowByteAligment()) * ratio);
+	mOutputBuffer.reset(new gpu::GpuBuffer(bytes, aligment));
 }
 
 
@@ -156,8 +156,8 @@ void ConvolutionNetwork<Input, Output>::addLayer(
 	// batches
 	typename ImageBatch<Input>::PtrS middleBatch(
 		new ImageBatch<Input>(
-			pConvolution->convolvedImageSizeX(*inputBatch, *pKernelsBatch),
-			pConvolution->convolvedImageSizeY(*inputBatch, *pKernelsBatch),
+			pConvolution->convolvedImageWidth(*inputBatch, *pKernelsBatch),
+			pConvolution->convolvedImageHeight(*inputBatch, *pKernelsBatch),
 			inputBatch->getImageChannelsCount(),
 			inputBatch->getImageRowByteAligment()));
 	middleBatch->allocateSpaceForImages(
@@ -165,8 +165,8 @@ void ConvolutionNetwork<Input, Output>::addLayer(
 
 	typename ImageBatch<Input>::PtrS outputBatch(
 		new ImageBatch<Input>(
-			pSampler->sampledImageSizeX(*middleBatch),
-			pSampler->sampledImageSizeY(*middleBatch),
+			pSampler->sampledImageWidth(*middleBatch),
+			pSampler->sampledImageHeight(*middleBatch),
 			inputBatch->getImageChannelsCount(),
 			inputBatch->getImageRowByteAligment()));
 	outputBatch->allocateSpaceForImages(middleBatch->getImagesCount(), true);

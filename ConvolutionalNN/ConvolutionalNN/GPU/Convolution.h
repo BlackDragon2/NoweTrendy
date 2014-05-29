@@ -60,10 +60,10 @@ public:
 		ImageBatch<T> const& pInputBatch,
 		ImageBatch<T> const& pKernelsBatch) const;
 
-	virtual uint32 convolvedImageSizeX(
+	virtual uint32 convolvedImageWidth(
 		ImageBatch<T> const& pInputBatch,
 		ImageBatch<T> const& pKernelsBatch) const = 0;
-	virtual uint32 convolvedImageSizeY(
+	virtual uint32 convolvedImageHeight(
 		ImageBatch<T> const& pInputBatch,
 		ImageBatch<T> const& pKernelsBatch) const = 0;
 
@@ -139,10 +139,10 @@ uint32 Convolution<T>::countOutputImageUnitSize(
 {
 	return 
 		utils::align(
-			convolvedImageSizeX(pInputBatch, pKernelsBatch) * 
+			convolvedImageWidth(pInputBatch, pKernelsBatch) * 
 			pInputBatch.getImageChannelsCount() * sizeof(T),
 			pInputBatch.getAlignedImageRowByteSize() * sizeof(T)
-		) * convolvedImageSizeY(pInputBatch, pKernelsBatch);
+		) * convolvedImageHeight(pInputBatch, pKernelsBatch);
 }
 
  
