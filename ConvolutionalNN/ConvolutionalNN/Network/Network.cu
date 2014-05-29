@@ -1,10 +1,8 @@
 #include "Network.cuh"
 
-cnn::nn::Network::Network(uint32 batchSize, float learningRate, float stopError)
+cnn::nn::Network::Network(float learningRate)
 {
-	this->batchSize=batchSize;
 	this->learningRate=learningRate;
-	this->stopError=stopError;
 }
 
 cnn::nn::Network::~Network()
@@ -42,4 +40,10 @@ uint32 cnn::nn::Network::findMax(float* tab, uint32 neuronsNr)
 			indMax=i;
 		}
 	return indMax;
+}
+
+void cnn::nn::Network::resetWeightsUpdates()
+{
+	for(uint32 i=0;i<layers.size();i++)
+		layers[i]->resetWeightsUpdates();
 }

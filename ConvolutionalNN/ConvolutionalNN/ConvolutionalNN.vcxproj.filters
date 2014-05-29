@@ -31,6 +31,12 @@
     <Filter Include="Sources\ConvolutionNetwork">
       <UniqueIdentifier>{1c73f540-ec08-4931-9e0e-4c9a7a501de3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Headers\JoinedNetwork">
+      <UniqueIdentifier>{9c3b7c41-adca-46fd-847d-d031a41f7f4a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources\JoinedNetwork">
+      <UniqueIdentifier>{aff4b4c2-718f-486c-b438-99d52a6a6426}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utils\Utils.h">
@@ -143,6 +149,9 @@
     </None>
     <None Include="GPU\CudaUtils.cuh">
       <Filter>Headers\GPU</Filter>
+    </None>
+    <None Include="JoinedNetwork\JoinedNetwork.cuh">
+      <Filter>Headers\JoinedNetwork</Filter>
     </None>
   </ItemGroup>
 </Project>

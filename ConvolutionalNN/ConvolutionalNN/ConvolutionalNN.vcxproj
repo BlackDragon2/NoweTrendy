@@ -199,6 +199,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <None Include="GPU\MaxPooling.cuh" />
     <None Include="GPU\Packer.cuh" />
     <None Include="GPU\VarianceCenterizer.cuh" />
+    <None Include="JoinedNetwork\JoinedNetwork.cuh" />
     <None Include="Network\Layer.cuh" />
     <None Include="Network\LayerCuda.cuh" />
     <None Include="Network\Network.cuh" />

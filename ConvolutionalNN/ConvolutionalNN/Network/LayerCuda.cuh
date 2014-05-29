@@ -23,11 +23,19 @@ __global__ void calculatePotential(T* input, float* weights, float* output, uint
 	}
 }
 
+template<typename T>
+__global__ void reset(T* toBeReseted, uint32 resetLength)
+{
+	uint32 idx		= ((blockIdx.x * blockDim.x) + threadIdx.x);
+	if(idx<resetLength)
+		toBeReseted[idx]=0;
+}
+
 __global__ void calculateSigmoidalOutput(float* output, uint32 neuronsNr, float* weights, float* biases);
 __global__ void calculateTanhOutput(float* output, uint32 neuronsNr, float* weights, float* biases);
 __global__ void calculateSigmoidalDelta(float* output, uint32 neuronsNr, uint32 weightsLength, float* errorRates);//dla wag miedzy warstwa i a j - output warstwy i, neuronsNr i weightsLength warstwy j
 __global__ void calculateTahnDelta(float* output, uint32 neuronsNr, uint32 weightsLength, float* errorRates);//dla wag miedzy warstwa i a j - output warstwy i, neuronsNr i weightsLength warstwy j
-
+__global__ void calculateError(std::string,
 	}}
 
 
