@@ -21,15 +21,20 @@ public:
 	void initWeights(float min, float max);
 	void setClasses(std::string* classes, uint32 classesNr);
 	void resetWeightsUpdates();
+	void updateWeights();
+	Layer* getLayer(uint32 index);
 	
-	template<typename T> 
-	float* train(T* input);
-	
-	template<typename T> 
-	std::string classify(T* input);
+	template<typename T>
+	void setWeightsUpdates(T* input);
 
 	template<typename T> 
-	cnn::gpu::GpuBuffer* cnn::nn::Network::calculateExample(T* input);
+	float* train(T* input, uint32 exampleClass);
+	
+	template<typename T> 
+	uint32 classify(T* input);
+
+	template<typename T> 
+	cnn::gpu::GpuBuffer* calculateExample(T* input);
 
 private:
 	float learningRate;
@@ -39,6 +44,17 @@ private:
 };
 	
 	}}
+
+template<typename T>
+cnn::nn::Network::setWeightsUpdates(T* input)
+{
+	layers[0]->setWeightsUpdates(input);
+	for(int i=1;i<layers.size();i++)
+	{
+		cnn::gpu::GpuBuffer* buffer=layers[i-1]->getOutputBuffer();
+		layers[i]->setWeightsUpdates(buffer->getDataPtr<float>());
+	}
+}
 
 template<typename T> 
 cnn::gpu::GpuBuffer* cnn::nn::Network::calculateExample(T* input)
@@ -53,13 +69,17 @@ cnn::gpu::GpuBuffer* cnn::nn::Network::calculateExample(T* input)
 }
 
 template<typename T> 
-float* cnn::nn::Network::train(T* input, char* exampleClass)
+float* cnn::nn::Network::train(T* input, int exampleClass)
 {
 	calculateExample(input);
-	layers[layers.size()-1]-L>calculateError(exampleClass);
+	layers[layers.size()-1]->calculateError(exampleClass);
 	for(int i=layers.size()-2;i>=0;i--)
 	{
-		layers[i]->calculateError(layers[i+1]->getErrorRatesBuffer());
+		layers[i]->calculateError(layers[i+1]->getWeightedErrorRates());
+	}
+	for(int i=0;i<layers.size();i++)
+	{
+
 	}
 
 }

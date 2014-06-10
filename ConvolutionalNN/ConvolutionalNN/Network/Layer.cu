@@ -47,9 +47,17 @@ cnn::gpu::GpuBuffer* cnn::nn::Layer::getOutputBuffer()
 	return &outputDev;
 }
 
-cnn::gpu::GpuBuffer* cnn::nn::Layer::getErrorRatesBuffer()
+cnn::gpu::GpuBuffer* cnn::nn::Layer::getWeightedErrorRates()
 {
-	return &errorRatesDev;
+	cnn::gpu::GpuBuffer* weightedError=new cnn::gpu::GpuBuffer();
+	weightedError->allocate(inputLength*sizeof(float));
+	int blocks;
+	if(weightsLength%config::Cuda::THREADS_PER_BLOCK==0)
+		blocks=weightsLength/config::Cuda::THREADS_PER_BLOCK;
+	else
+		blocks=weightsLength/config::Cuda::THREADS_PER_BLOCK+1;
+	cnn::cuda::calculateWeightedError<<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(errorRatesDev.getDataPtr<float>, weightsDev.getDataPtr<float>+neuronsNr, weightedError->getDataPtr<float>, uint32 inputLength, uint32 neuronsNr);
+	return weightedError;
 }
 
 uint32 cnn::nn::Layer::getNeuronsNr()
@@ -57,14 +65,22 @@ uint32 cnn::nn::Layer::getNeuronsNr()
 	return neuronsNr;
 }
 
-float cnn::nn::Layer::calculateError(char* exampleClass, cnn::gpu::GpuBuffer* classes)
+float cnn::nn::Layer::calculateError(uint32 exampleClass)
 {
 	int blocks;
+	cnn::gpu::GpuBuffer error;
+	error.allocate(sizeof(float));
 	if(neuronsNr%config::Cuda::THREADS_PER_BLOCK==0)
 		blocks=neuronsNr/config::Cuda::THREADS_PER_BLOCK;
 	else
 		blocks=neuronsNr/config::Cuda::THREADS_PER_BLOCK+1;
-	cnn::cuda::calculateError<<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(exampleClass, classes->getDataPtr<char*>, outputDev.getDataPtr<float>(), neuronsNr);
+	if(activationFun==SIGMOIDAL)
+		cnn::cuda::calculateSigmoidalError<<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(exampleClass, outputDev.getDataPtr<float>(), neuronsNr, errorRatesDev.getDataPtr<float>() , error.getDataPtr<float>());
+	else
+		cnn::cuda::calculateTanhError<<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(exampleClass, outputDev.getDataPtr<float>(), neuronsNr, errorRatesDev.getDataPtr<float>() ,error.getDataPtr<float>());
+	float result;
+	error.loadFromDevice(&result, sizeof(float));
+	return result;
 }
 
 void cnn::nn::Layer::calculateError(cnn::gpu::GpuBuffer* errorRates)
@@ -74,4 +90,29 @@ void cnn::nn::Layer::calculateError(cnn::gpu::GpuBuffer* errorRates)
 		blocks=neuronsNr/config::Cuda::THREADS_PER_BLOCK;
 	else
 		blocks=neuronsNr/config::Cuda::THREADS_PER_BLOCK+1;
+	if(activationFun==SIGMOIDAL)
+		cnn::cuda::calculateSigmoidalDelta<<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(outputDev.getDataPtr<float>(), neuronsNr, errorRatesDev.getDataPtr<float>(), errorRates.getDataPtr<float>());
+	else
+		cnn::cuda::calculateSigmoidalDelta<<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(outputDev.getDataPtr<float>(), neuronsNr, errorRatesDev.getDataPtr<float>() ,errorRates.getDataPtr<float>());
+	errorRates->free();
+}
+
+void cnn::nn::Layer::setWeightsUpdates()
+{
+	int blocks;
+	if(weightsLength%config::Cuda::THREADS_PER_BLOCK==0)
+		blocks=weightsLength/config::Cuda::THREADS_PER_BLOCK;
+	else
+		blocks=weightsLength/config::Cuda::THREADS_PER_BLOCK+1;
+	cnn::cuda::calculateWeightedError<<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(errorRatesDev.getDataPtr<float>, weightsDev.getDataPtr<float>+neuronsNr, weightedError->getDataPtr<float>, uint32 inputLength, uint32 neuronsNr);
+}
+
+void cnn::nn::Layer::updateWeights()
+{
+	int blocks;
+	if(weightsLength%config::Cuda::THREADS_PER_BLOCK==0)
+		blocks=weightsLength/config::Cuda::THREADS_PER_BLOCK;
+	else
+		blocks=weightsLength/config::Cuda::THREADS_PER_BLOCK+1;
+	cnn::cuda::calculateWeightedError<<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(errorRatesDev.getDataPtr<float>, weightsDev.getDataPtr<float>+neuronsNr, weightedError->getDataPtr<float>, uint32 inputLength, uint32 neuronsNr);
 }

@@ -22,17 +22,21 @@ public:
 	Layer(uint32 neuronsNr, uint32 inputLength, activationFunction fun);
 	~Layer(void);
 	void initWeights(float min, float max);
+
+	template<typename resetType>
 	void resetWeightsUpdates();
 
 	template<typename T> 
 	void calculateOutput(T* input);
 	
 	float* getOutput();
-	cnn::gpu::GpuBuffer* getErrorRatesBuffer();
+	cnn::gpu::GpuBuffer* getWeightedErrorRates();
 	cnn::gpu::GpuBuffer* getOutputBuffer();
 	uint32 getNeuronsNr();
-	float calculateError(char* exampleClass, cnn::gpu::GpuBuffer* classes);
+	float calculateError(uint32 exampleClass);
 	void calculateError(cnn::gpu::GpuBuffer* errorRates);
+	void setWeightsUpdates();
+	void updateWeights();
 
 private:
 	uint32 neuronsNr;
@@ -73,7 +77,7 @@ void cnn::nn::Layer::calculateOutput(T* input)
 		outputDev.loadFromDevice(output, neuronsNr*sizeof(float));
 }
 
-template<typename T>
+template<typename resetType>
 void cnn::nn::Layer::resetWeightsUpdates()
 {
 	int blocks;
@@ -81,8 +85,18 @@ void cnn::nn::Layer::resetWeightsUpdates()
 		blocks=weightsLength/config::Cuda::THREADS_PER_BLOCK;
 	else
 		blocks=weightsLength/config::Cuda::THREADS_PER_BLOCK+1;
-	cnn::cuda::reset<T><<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(weightsUpdateDev.getDataPtr<float>(), weightsLength);
+	cnn::cuda::reset<resetType><<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(weightsUpdateDev.getDataPtr<resetType>(), weightsLength);
 }
 
+template<typename T>
+void cnn::nn::Layer::setWeightsUpdates(T* input)
+{
+	int blocks;
+	if(weightsLength%config::Cuda::THREADS_PER_BLOCK==0)
+		blocks=weightsLength/config::Cuda::THREADS_PER_BLOCK;
+	else
+		blocks=weightsLength/config::Cuda::THREADS_PER_BLOCK+1;
+	cnn::cuda::setWeightsUpdates<<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(input, weightsLength, weightsUpdateDev.getDataPtr<float>(), errorRatesDev.getDataPtr<float>());
+}
 #endif	/* CNN_LAYER_H_ */
 

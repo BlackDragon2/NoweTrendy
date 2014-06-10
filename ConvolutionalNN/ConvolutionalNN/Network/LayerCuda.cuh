@@ -31,11 +31,22 @@ __global__ void reset(T* toBeReseted, uint32 resetLength)
 		toBeReseted[idx]=0;
 }
 
+template<typename T>
+__global__ void setWeightsUpdates(T* input, uint32 weightsLength, float* updates, float* errorRates, float learningRate)
+{
+	uint32 idx		= ((blockIdx.x * blockDim.x) + threadIdx.x);
+	if(idx<weightsLength)
+		add(&updates[idx], learningRate*errorRates[idx/neuronsNr]*input[idx%]);
+}
+
 __global__ void calculateSigmoidalOutput(float* output, uint32 neuronsNr, float* weights, float* biases);
 __global__ void calculateTanhOutput(float* output, uint32 neuronsNr, float* weights, float* biases);
-__global__ void calculateSigmoidalDelta(float* output, uint32 neuronsNr, uint32 weightsLength, float* errorRates);//dla wag miedzy warstwa i a j - output warstwy i, neuronsNr i weightsLength warstwy j
-__global__ void calculateTahnDelta(float* output, uint32 neuronsNr, uint32 weightsLength, float* errorRates);//dla wag miedzy warstwa i a j - output warstwy i, neuronsNr i weightsLength warstwy j
-__global__ void calculateError(std::string,
+__global__ void calculateSigmoidalDelta(float* output, uint32 neuronsNr, float* errorRates, float* errorRatesProp);
+__global__ void calculateTahnDelta(float* output, uint32 neuronsNr, float* errorRates, float* errorRatesProp);
+__global__ void calculateSigmoidalError(uint32 exampleClass, float* output, uint32 neuronsNr, float* errorRates, float* error);
+__global__ void calculateTanhError(uint32 exampleClass, float* output, uint32 neuronsNr, float* errorRates, float* error);
+__global__ void calculateWeightedError(float* errorRates, float* weights, float* weightedError, uint32 inputLength, uint32 neuronsNr);
+__global__ void updateWeights(float* weights, float* weigthsUpdate, uint32 weightsLength);
 	}}
 
 

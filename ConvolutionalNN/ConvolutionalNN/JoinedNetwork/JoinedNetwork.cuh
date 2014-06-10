@@ -12,10 +12,10 @@ template<typename Input, typename Output>
 class JoinedNetwork
 {
 public:
-	JoinedNetwork(cnn::cnetwork::ConvolutionNetwork<Input, Output>* cnetwork, cnn::nn::Network* nnetwork, std::shared_ptr<cnn::ImageBatch<uchar>>& pImages, std::string* classes, float stopError, float learningRate);
+	JoinedNetwork(cnn::cnetwork::ConvolutionNetwork<Input, Output>* cnetwork, cnn::nn::Network* nnetwork, std::shared_ptr<cnn::ImageBatch<uchar>>& pImages, float stopError, float learningRate);
 	~JoinedNetwork();
-	std::string classify();
-	float teach();
+	uint32 classify();
+	void teach(uint32* classes);
 
 private:
 	float error;
@@ -25,23 +25,26 @@ private:
 	cnn::cnetwork::ConvolutionNetwork<Input, Output>* cnetwork;
 	cnn::nn::Network* nnetwork;
 	std::shared_ptr<cnn::ImageBatch<uchar>> pImages;
-	std::string* classes;
 };
 	}
 
 template<typename Input, typename Output>
-cnn::JoinedNetwork<Input, Output>::JoinedNetwork(cnn::cnetwork::ConvolutionNetwork<Input, Output>* cnetwork, cnn::nn::Network* nnetwork, std::shared_ptr<cnn::ImageBatch<uchar>>& pImages, std::string* classes, float stopError, float learningRate)
+cnn::JoinedNetwork<Input, Output>::JoinedNetwork(cnn::cnetwork::ConvolutionNetwork<Input, Output>* cnetwork, cnn::nn::Network* nnetwork, std::shared_ptr<cnn::ImageBatch<uchar>>& pImages, float stopError, float learningRate)
 {
 	this->cnetwork=cnetwork;
 	this->nnetwork=nnetwork;
 	this->pImages=pImages;
-	this->classes=classes;
 	this->stopError=stopError;
 	this->learningRate=learningRate;
 }
 
 template<typename Input, typename Output>
-cnn::JoinedNetwork<Input, Output>::teach(std::string* classes)
+cnn::JoinedNetwork<Input, Output>::~JoinedNetwork()
+{
+}
+
+template<typename Input, typename Output>
+void cnn::JoinedNetwork<Input, Output>::teach(uint32* classes)
 {
 	while(stopError<error)
 	{
@@ -50,13 +53,18 @@ cnn::JoinedNetwork<Input, Output>::teach(std::string* classes)
 		for(int i=0;i<pImages->getImagesCount();i++)
 		{
 			cnetwork->run();
-			nnetwork->train();
+			nnetwork->train(cnetwork->getOutputBuffer()->getDataPtr<float>, classes[i]);
+			cnn::gpu::GpuBuffer* buffer=nnetwork->getLayer[0]->getWeightedErrorRates();
 
+			nnetwork->setWeightsUpdates(cnetwork->getOutputBuffer()->getDataPtr<float>);
 		}
+		nnetwork->updateWeights();
+		std::cout<<error<<std::endl;
+	}
 }
 
 template<typename Input, typename Output>
-cnn::JoinedNetwork<Input, Output>::processExample()
+void cnn::JoinedNetwork<Input, Output>::processExample()
 {
 }
 #endif	/* CNN_JOINED_NETWORK_H_ */

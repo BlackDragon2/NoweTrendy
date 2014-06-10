@@ -12,6 +12,11 @@ cnn::nn::Network::~Network()
 	layers.clear();
 }
 
+cnn::nn::Layer* cnn::nn::Network::getLayer(uint32 index)
+{
+	return layers[index];
+}
+
 void cnn::nn::Network::addLayer(uint32 neuronsNr, uint32 inputLength, activationFunction fun)
 {
 	layers.push_back(new Layer(neuronsNr, inputLength, fun));
@@ -45,5 +50,11 @@ uint32 cnn::nn::Network::findMax(float* tab, uint32 neuronsNr)
 void cnn::nn::Network::resetWeightsUpdates()
 {
 	for(uint32 i=0;i<layers.size();i++)
-		layers[i]->resetWeightsUpdates();
+		layers[i]->resetWeightsUpdates<float>();
+}
+
+void cnn::nn::Network::updateWeights()
+{
+	for(uint32 i=0;i<layers.size();i++)
+		layers[i]->updateWeights();
 }

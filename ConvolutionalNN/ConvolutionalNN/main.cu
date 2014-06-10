@@ -28,6 +28,9 @@
 #include "Types.h"
 #include "Utils/FoldsFactory.h"
 
+#include "JoinedNetwork/JoinedNetwork.cuh"
+#include "Network/Network.cuh"
+
 
 //#define MEASURE_SEPARATE
 
@@ -132,6 +135,22 @@ int main()
 	cudaMemGetInfo(&freeBytes, &totalBytes);
 	std::cerr << freeBytes  << " " << totalBytes << std::endl;
 
+	/////////////////////////////////
+	cnn::nn::Network net(0.1);
+	net.addLayer(30,70,cnn::nn::SIGMOIDAL);
+	net.addLayer(40,30,cnn::nn::SIGMOIDAL);
+	net.addLayer(20,40,cnn::nn::SIGMOIDAL);
+	net.initWeights(-1,1);
+	
+	cnn::JoinedNetwork<uchar, float> joinedNet(&network, &net, b, 2, 0.1);
+	uint32* classes=new uint32[3];
+	classes[0]=2;
+	classes[1]=0;
+	classes[2]=1;
+	joinedNet.teach(classes);
+	joinedNet.classify();
+	delete classes;
+	/////////////////////////////////
 	// HOWTO
 	if (false)
 	{
