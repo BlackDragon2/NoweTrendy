@@ -148,8 +148,8 @@ int main()
 	classes[1]=0;
 	classes[2]=1;
 	joinedNet.teach(classes);
-	joinedNet.classify();
-	delete classes;
+	//joinedNet.classify();
+	delete[] classes;
 	/////////////////////////////////
 	// HOWTO
 	if (false)

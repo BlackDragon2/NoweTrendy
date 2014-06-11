@@ -107,9 +107,6 @@
     <CudaCompile Include="Network\LayerCuda.cu">
       <Filter>Sources\Network</Filter>
     </CudaCompile>
-    <CudaCompile Include="GPU\CudaUtils.cu">
-      <Filter>Sources\GPU</Filter>
-    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Utils\FoldsFactory.cpp">

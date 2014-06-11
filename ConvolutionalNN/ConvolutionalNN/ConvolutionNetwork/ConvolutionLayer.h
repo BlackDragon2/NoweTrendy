@@ -185,6 +185,7 @@ gpu::GpuBuffer::PtrS const& ConvolutionLayer<T>::getOutputBuffer() const {
 }
 
 
+	
 	}
 }
 

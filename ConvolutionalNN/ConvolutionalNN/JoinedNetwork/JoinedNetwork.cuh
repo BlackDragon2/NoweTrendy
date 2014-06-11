@@ -18,7 +18,6 @@ public:
 	void teach(uint32* classes);
 
 private:
-	float error;
 	float stopError;
 	float learningRate;
 	void processExample();
@@ -46,18 +45,21 @@ cnn::JoinedNetwork<Input, Output>::~JoinedNetwork()
 template<typename Input, typename Output>
 void cnn::JoinedNetwork<Input, Output>::teach(uint32* classes)
 {
+	float error=2*stopError;
 	while(stopError<error)
 	{
 		error=0;
 		nnetwork->resetWeightsUpdates();
-		for(int i=0;i<pImages->getImagesCount();i++)
+		for(uint32 i=0;i<pImages->getImagesCount();i++)
 		{
 			cnetwork->run();
-			nnetwork->train(cnetwork->getOutputBuffer()->getDataPtr<float>, classes[i]);
-			cnn::gpu::GpuBuffer* buffer=nnetwork->getLayer[0]->getWeightedErrorRates();
-
-			nnetwork->setWeightsUpdates(cnetwork->getOutputBuffer()->getDataPtr<float>);
+			//cnn::gpu::GpuBuffer::PtrS bf=cnetwork->getOutputBuffer();
+			//float* x=new float[10];
+			error+=nnetwork->train<float>(cnetwork->getOutputBuffer()->getDataPtr<float>(), classes[i]);
+			//error+=nnetwork->train<float>(x, classes[i]);
+			cnn::gpu::GpuBuffer* buffer=nnetwork->getLayer(0)->getWeightedErrorRates();//do propagacji
 		}
+		error/=pImages->getImagesCount();
 		nnetwork->updateWeights();
 		std::cout<<error<<std::endl;
 	}

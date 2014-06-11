@@ -10,7 +10,18 @@
 namespace cnn{
 	namespace cuda{
 
-__device__ float add(float* address, float value);
+__device__ inline float add(float* address, float value)
+{
+  float old = value;  
+  float ret=atomicExch(address, 0.0f);
+  float new_old=ret+old;
+  while ((old = atomicExch(address, new_old))!=0.0f)
+  {
+	new_old = atomicExch(address, 0.0f);
+	new_old += old;
+  }
+  return ret;
+}
 	}}
 #endif	/* CNN_CUDA_UTILS_H_ */
 

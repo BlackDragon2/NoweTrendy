@@ -81,7 +81,7 @@ __global__ void cnn::cuda::calculateWeightedError(float* errorRates, float* weig
 	}
 }
 
-__global__ void cnn::cuda::(float* weights, float* weigthsUpdate, uint32 weightsLength)
+__global__ void cnn::cuda::updateWeights(float* weights, float* weigthsUpdate, uint32 weightsLength)
 {
 	uint32 idx		= ((blockIdx.x * blockDim.x) + threadIdx.x);
 	if(idx<weightsLength)

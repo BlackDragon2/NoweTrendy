@@ -28,7 +28,7 @@ void cnn::nn::Network::initWeights(float min, float max)
 		layers[i]->initWeights(min, max);
 }
 
-void cnn::nn::Network::setClasses(std::string* classes, uint32 classesNr)
+void cnn::nn::Network::setClasses(uint32* classes, uint32 classesNr)
 {
 	for(uint32 i=0;i<classesNr;i++)
 		this->classes.push_back(classes[i]);
@@ -38,7 +38,7 @@ uint32 cnn::nn::Network::findMax(float* tab, uint32 neuronsNr)
 {
 	uint32 indMax=0;
 	float valMax=tab[0];
-	for(int i=1;i<neuronsNr;i++)
+	for(uint32 i=1;i<neuronsNr;i++)
 		if(valMax<tab[i])
 		{
 			valMax=tab[i];

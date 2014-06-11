@@ -35,7 +35,10 @@ public:
 	uint32 getNeuronsNr();
 	float calculateError(uint32 exampleClass);
 	void calculateError(cnn::gpu::GpuBuffer* errorRates);
-	void setWeightsUpdates();
+	
+	template<typename T>
+	void setWeightsUpdates(T* input, float learningRate);
+	
 	void updateWeights();
 
 private:
@@ -46,7 +49,8 @@ private:
 	float* weights;
 	float* output;
 	float* biases;
-	cnn::gpu::GpuBuffer weightsDev, outputDev, biasesDev, biasesUpdateDev, weightsUpdateDev, errorRatesDev;
+	cnn::gpu::GpuBuffer weightsDev, outputDev, biasesDev, weightsUpdateDev, errorRatesDev;
+	//weightsDev - najpierw biasy potem wagi kolejnych neuronow
 };
 	}}
 
@@ -89,14 +93,14 @@ void cnn::nn::Layer::resetWeightsUpdates()
 }
 
 template<typename T>
-void cnn::nn::Layer::setWeightsUpdates(T* input)
+void cnn::nn::Layer::setWeightsUpdates(T* input, float learningRate)
 {
 	int blocks;
 	if(weightsLength%config::Cuda::THREADS_PER_BLOCK==0)
 		blocks=weightsLength/config::Cuda::THREADS_PER_BLOCK;
 	else
 		blocks=weightsLength/config::Cuda::THREADS_PER_BLOCK+1;
-	cnn::cuda::setWeightsUpdates<<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(input, weightsLength, weightsUpdateDev.getDataPtr<float>(), errorRatesDev.getDataPtr<float>());
+	cnn::cuda::setWeightsUpdates<float><<<blocks, config::Cuda::THREADS_PER_BLOCK>>>(input, weightsLength, neuronsNr, biasesDev.getDataPtr<float>(), inputLength, weightsUpdateDev.getDataPtr<float>(), errorRatesDev.getDataPtr<float>(), learningRate);
 }
 #endif	/* CNN_LAYER_H_ */
 

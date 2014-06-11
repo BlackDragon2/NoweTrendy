@@ -162,7 +162,6 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="GPU\CudaUtils.cu" />
     <CudaCompile Include="GPU\GpuBuffer.cu" />
     <CudaCompile Include="main.cu" />
     <CudaCompile Include="Network\Layer.cu" />
