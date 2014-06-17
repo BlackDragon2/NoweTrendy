@@ -5,13 +5,12 @@
 #include "device_launch_parameters.h"
 #include "device_functions.h"
 #include "cuda.h"
-#include "../GPU/CudaUtils.cuh"
 #include "../Types.h"
 
 namespace cnn{
 	namespace cuda{
 
-		extern __device__ float add(float* address, float value);
+__device__ float add(float* address, float value);
 
 template<typename T>
 __global__ void calculatePotential(T* input, float* weights, float* output, uint32 inputLength, uint32 neuronsNr)
@@ -54,6 +53,10 @@ __global__ void calculateSigmoidalError(uint32 exampleClass, float* output, uint
 __global__ void calculateTanhError(uint32 exampleClass, float* output, uint32 neuronsNr, float* errorRates, float* error);
 __global__ void calculateWeightedError(float* errorRates, float* weights, float* weightedError, uint32 inputLength, uint32 neuronsNr);
 __global__ void updateWeights(float* weights, float* weigthsUpdate, uint32 weightsLength);
+__global__ void convolution(float* input, float* output, float* kernels, uint32 kernelSize, uint32 inputSize, uint32 inputWidth, uint32 inputHeight, uint32 outputWidth, uint32 outputHeight);
+__global__ void maxPooling(float* input, float* output, uint32 kernelSize, uint32 inputWidth, uint32 inputHeight, uint32 outputWidth, uint32 outputHeight, float* errorRates);
+__global__ void maxError(float* errorRates, uint32 kernelSize, uint32 inputWidth, uint32 inputHeight, uint32 outputWidth, uint32 outputHeight, float* errorProp);//ustawia errorRates dla maxPoolinga
+__global__ void errorConv(float* input, float* errorProp, float* kernels, uint32 kernelSize, uint32 inputSize, uint32 inputWidth, uint32 inputHeight, uint32 outputWidth, uint32 outputHeight, float* errorRates, float* weightsUpdate, float learningRate);
 	}}
 
 

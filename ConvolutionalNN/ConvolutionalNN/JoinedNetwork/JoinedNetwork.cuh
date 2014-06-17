@@ -1,4 +1,4 @@
-#ifndef CNN_JOINED_NETWORK_H_
+/*#ifndef CNN_JOINED_NETWORK_H_
 #define CNN_JOINED_NETWORK_H_
 
 #include "..\ConvolutionNetwork\ConvolutionNetwork.h"
@@ -55,7 +55,7 @@ void cnn::JoinedNetwork<Input, Output>::teach(uint32* classes)
 			cnetwork->run();
 			//cnn::gpu::GpuBuffer::PtrS bf=cnetwork->getOutputBuffer();
 			//float* x=new float[10];
-			error+=nnetwork->train<float>(cnetwork->getOutputBuffer()->getDataPtr<float>(), classes[i]);
+			error+=nnetwork->train<float>(, classes[i]);
 			//error+=nnetwork->train<float>(x, classes[i]);
 			cnn::gpu::GpuBuffer* buffer=nnetwork->getLayer(0)->getWeightedErrorRates();//do propagacji
 		}
@@ -69,4 +69,35 @@ template<typename Input, typename Output>
 void cnn::JoinedNetwork<Input, Output>::processExample()
 {
 }
+#endif	/* CNN_JOINED_NETWORK_H_ */
+
+#ifndef CNN_JOINED_NETWORK_H_
+#define CNN_JOINED_NETWORK_H_
+
+#include "..\ConvolutionNetwork\ConvolutionNetwork.h"
+#include "..\Network\Network.cuh"
+#include "..\MyCNN\ConvNet.h"
+#include "..\MyCNN\Images.h"
+
+
+namespace cnn{
+
+class JoinedNetwork
+{
+public:
+	JoinedNetwork(mycnn::ConvNet* cnetwork, cnn::nn::Network* nnetwork, mycnn::Images im, float stopError, float learningRate);
+	~JoinedNetwork();
+	uint32 classify();
+	void teach();
+
+private:
+	float stopError;
+	float learningRate;
+	void processExample();
+	mycnn::ConvNet* cnetwork;
+	cnn::nn::Network* nnetwork;
+	mycnn::Images images;
+};
+	}
+
 #endif	/* CNN_JOINED_NETWORK_H_ */

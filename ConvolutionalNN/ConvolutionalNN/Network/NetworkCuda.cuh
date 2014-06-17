@@ -10,8 +10,6 @@
 namespace cnn{
 	namespace cuda{
 
-__device__ float add(float* address, float value);
-
 template<typename T>
 __global__ void calculateError(T* classes, float* realOutput, float* errorRates, T exampleClass, uint32 neuronsNr)
 {

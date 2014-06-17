@@ -31,6 +31,9 @@
 #include "JoinedNetwork/JoinedNetwork.cuh"
 #include "Network/Network.cuh"
 
+#include "MyCNN/Images.h"
+#include "MyCNN/ConvNet.h"
+
 
 //#define MEASURE_SEPARATE
 
@@ -48,18 +51,36 @@ void doFloat(
 int main()
 {
 	srand((uint32)time(0));
+	std::string names[] = {"9336923", "9338535"};
+	mycnn::Images im;
+	im.load(names, 2, 5, "data", 1);
+	mycnn::ConvLayer l1(6, 3, im.getImageWidth(), im.getImageHeight(), im.getImageSize());
+	mycnn::MaxPoolLayer l2(2, l1.getOutputWidth(), l1.getOutputHeight(), l1.getOutputSize());
+	mycnn::ConvNet net(0.2f);
+	net.addLayer(l1);
+	net.addLayer(l2);
+	cnn::nn::Network network(0.1f);
+	network.addLayer(l2.getOutputSize()*2,l2.getOutputSize(),cnn::nn::SIGMOIDAL);//neuronsNR,inputLength
+	network.addLayer(2,l2.getOutputSize()*2,cnn::nn::SIGMOIDAL);
+	//network.addLayer(20,40,cnn::nn::SIGMOIDAL);
+	network.initWeights(-1,1);
+}
+
+/*int main3()
+{
+	srand((uint32)time(0));
 	
 	__int64 freq;
 	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
 	double spc = 1.0 / freq;
 	 
-	/*
-	std::string names[] = {
-		"9336923", "9338535", "anpage", "asamma", "asewil",
-		"astefa", "drbost", "ekavaz", "elduns", "kaknig", 
-		"klclar", "ksunth", "lfso", "mbutle", "phughe", 
-		"sbains", "slbirc", "vstros", "yfhsie"};
-	*/
+	
+	//std::string names[] = {
+	//	"9336923", "9338535", "anpage", "asamma", "asewil",
+	//	"astefa", "drbost", "ekavaz", "elduns", "kaknig", 
+	//	"klclar", "ksunth", "lfso", "mbutle", "phughe", 
+	//	"sbains", "slbirc", "vstros", "yfhsie"};
+
 	std::string names[] = {"slbirc"};
 	size_t nsize = ARRAYSIZE(names);
 
@@ -233,13 +254,13 @@ int main2()
 	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
 	double spc = 1.0 / freq;
 
-	/*
-	std::string names[] = {
-		"9336923", "9338535", "anpage", "asamma", "asewil",
-		"astefa", "drbost", "ekavaz", "elduns", "kaknig", 
-		"klclar", "ksunth", "lfso", "mbutle", "phughe", 
-		"sbains", "slbirc", "vstros", "yfhsie"};
-	*/
+	
+	//std::string names[] = {
+	//	"9336923", "9338535", "anpage", "asamma", "asewil",
+	//	"astefa", "drbost", "ekavaz", "elduns", "kaknig", 
+	//	"klclar", "ksunth", "lfso", "mbutle", "phughe", 
+	//	"sbains", "slbirc", "vstros", "yfhsie"};
+
 	std::string names[] = {"slbirc"};
 	size_t nsize = ARRAYSIZE(names);
 
@@ -456,4 +477,4 @@ void doFloat(
 		cv::imshow("kernels", filtersUchar->retriveAllImagesAsMat(filters.getImagesCount()));
 	}
 	cv::waitKey(0);
-}
+}*/

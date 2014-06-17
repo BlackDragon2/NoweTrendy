@@ -1,5 +1,18 @@
 #include "LayerCuda.cuh"
 
+__device__ float cnn::cuda::add(float* address, float value)
+{
+  float old = value;  
+  float ret=atomicExch(address, 0.0f);
+  float new_old=ret+old;
+  while ((old = atomicExch(address, new_old))!=0.0f)
+  {
+	new_old = atomicExch(address, 0.0f);
+	new_old += old;
+  }
+  return ret;
+}
+
 __global__ void cnn::cuda::calculateSigmoidalOutput(float* output, uint32 neuronsNr, float* weights, float* biases)
 {
 	uint32 idx		= ((blockIdx.x * blockDim.x) + threadIdx.x);
@@ -89,3 +102,76 @@ __global__ void cnn::cuda::updateWeights(float* weights, float* weigthsUpdate, u
 		weights[idx]=weights[idx]+weigthsUpdate[idx];
 	}
 }
+
+__global__ void cnn::cuda::convolution(float* input, float* output, float* kernels, uint32 kernelSize, uint32 inputSize, uint32 inputWidth, uint32 inputHeight, uint32 outputWidth, uint32 outputHeight)
+{
+	uint32 imCount=inputSize/(inputWidth*inputHeight);
+	uint32 imDist=blockIdx.y*inputWidth*inputHeight;//wyznacza ktory obraz wejscia
+	uint32 kerDist=blockIdx.x*kernelSize*kernelSize;//wyznacza ktory kernel
+	uint32 outImDist=blockIdx.y*outputWidth*outputHeight;//przesuniecie dla calosci robionej przez jednego kernela
+	uint32 outKerDist=blockIdx.x*outputWidth*outputHeight*imCount;//przesuniecie dla obrazu zrobienego przez kernel
+	uint32 x=threadIdx.x*kernelSize+kernelSize/2;//wyznacza kolumne (wspolrzedna x)
+	uint32 y=threadIdx.y*kernelSize+kernelSize/2;//wyznacza wiersz (wspolrzedna y)
+	float val=0;
+	for(uint32 i=-kernelSize/2;i<=kernelSize/2;i++)
+		for(uint32 j=-kernelSize/2;j<=kernelSize/2;j++)
+			val+=input[(y+j)*inputWidth+x+i+imDist]*kernels[(j+kernelSize/2)*kernelSize+i+kernelSize/2+kerDist];
+		output[threadIdx.x+outputWidth*threadIdx.y+outKerDist+outImDist]=val;//na wyjsciu kolejno wiersze, kolumny, wszystkie obrazy dla 1 kernela, reszta kerneli
+
+}
+
+__global__ void cnn::cuda::maxPooling(float* input, float* output, uint32 kernelSize, uint32 inputWidth, uint32 inputHeight, uint32 outputWidth, uint32 outputHeight, float* errorRates)
+{
+	uint32 imDist=blockIdx.x*inputWidth*inputHeight;
+	uint32 outImDist=blockIdx.y*outputWidth*outputHeight;
+	uint32 x=threadIdx.x*kernelSize;
+	uint32 y=threadIdx.y*kernelSize;
+	uint32 maxId=y*inputWidth+x+imDist;
+	float val=input[y*inputWidth+x+imDist];
+	errorRates[maxId]=0;
+	for(uint32 i=0;i<kernelSize;i++)
+	{
+		for(uint32 j=0;j<kernelSize;j++)
+		{
+			if(input[(y+j)*inputWidth+x+i+imDist]>val)
+			{
+				val=input[(y+j)*inputWidth+x+i+imDist];
+				maxId=(y+j)*inputWidth+x+i+imDist;
+			}
+			errorRates[(y+j)*inputWidth+x+i+imDist]=0;
+		}
+	}
+	errorRates[maxId]=1;
+	output[threadIdx.x+outputWidth*threadIdx.y+outImDist]=val;
+}
+
+__global__ void cnn::cuda::maxError(float* errorRates, uint32 kernelSize, uint32 inputWidth, uint32 inputHeight, uint32 outputWidth, uint32 outputHeight, float* errorProp)
+{
+	uint32 imDist=blockIdx.x*inputWidth*inputHeight;
+	uint32 imDistProp=blockIdx.x*outputWidth*outputHeight;
+	uint32 x=threadIdx.x*kernelSize;
+	uint32 y=threadIdx.y*kernelSize;
+	for(uint32 i=0;i<kernelSize;i++)
+	{
+		for(uint32 j=0;j<kernelSize;j++)
+			errorRates[(y+j)*inputWidth+x+i+imDist]=errorRates[(y+j)*inputWidth+x+i+imDist]*errorProp[threadIdx.x+threadIdx.y*outputWidth+imDistProp];
+	}
+}
+
+__global__ void cnn::cuda::errorConv(float* input, float* errorProp, float* kernels, uint32 kernelSize, uint32 inputSize, uint32 inputWidth, uint32 inputHeight, uint32 outputWidth, uint32 outputHeight, float* errorRates, float* weightsUpdate, float learningRate)
+{
+	uint32 imCount=inputSize/(inputWidth*inputHeight);
+	uint32 imDist=blockIdx.y*inputWidth*inputHeight;//wyznacza ktory obraz wejscia
+	uint32 kerDist=blockIdx.x*kernelSize*kernelSize;//wyznacza ktory kernel
+	uint32 outImDist=blockIdx.y*outputWidth*outputHeight;//przesuniecie dla calosci robionej przez jednego kernela
+	uint32 outKerDist=blockIdx.x*outputWidth*outputHeight*imCount;//przesuniecie dla obrazu zrobienego przez kernel
+	uint32 x=threadIdx.x*kernelSize+kernelSize/2;//wyznacza kolumne (wspolrzedna x)
+	uint32 y=threadIdx.y*kernelSize+kernelSize/2;//wyznacza wiersz (wspolrzedna y)
+	for(uint32 i=-kernelSize/2;i<=kernelSize/2;i++)
+		for(uint32 j=-kernelSize/2;j<=kernelSize/2;j++)
+		{
+			add(&weightsUpdate[(j+kernelSize/2)*kernelSize+i+kernelSize/2+kerDist],learningRate*input[(y+j)*inputWidth+x+i+imDist]*errorProp[threadIdx.x+outputWidth*threadIdx.y+outKerDist+outImDist]);
+			errorRates[(y+j)*inputWidth+x+i+imDist]=kernels[(j+kernelSize/2)*kernelSize+i+kernelSize/2+kerDist]*errorProp[threadIdx.x+outputWidth*threadIdx.y+outKerDist+outImDist];
+		}
+}
+

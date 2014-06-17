@@ -37,6 +37,12 @@
     <Filter Include="Sources\JoinedNetwork">
       <UniqueIdentifier>{aff4b4c2-718f-486c-b438-99d52a6a6426}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Sources\MyCNN">
+      <UniqueIdentifier>{b10c6fab-eba1-4c74-8990-b6b87fdfd85c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\MyCNN">
+      <UniqueIdentifier>{599198d0-63cb-491f-8c78-301ab009b23e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utils\Utils.h">
@@ -90,6 +96,21 @@
     <ClInclude Include="ConvolutionNetwork\ConvolutionNetwork.h">
       <Filter>Headers\ConvolutionNetwork</Filter>
     </ClInclude>
+    <ClInclude Include="MyCNN\Images.h">
+      <Filter>Headers\MyCNN</Filter>
+    </ClInclude>
+    <ClInclude Include="MyCNN\ConvLayer.h">
+      <Filter>Headers\MyCNN</Filter>
+    </ClInclude>
+    <ClInclude Include="MyCNN\MaxPoolLayer.h">
+      <Filter>Headers\MyCNN</Filter>
+    </ClInclude>
+    <ClInclude Include="MyCNN\ConvNet.h">
+      <Filter>Headers\MyCNN</Filter>
+    </ClInclude>
+    <ClInclude Include="MyCNN\VirtualLayer.h">
+      <Filter>Headers\MyCNN</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="main.cu">
@@ -107,6 +128,15 @@
     <CudaCompile Include="Network\LayerCuda.cu">
       <Filter>Sources\Network</Filter>
     </CudaCompile>
+    <CudaCompile Include="MyCNN\MaxPoolLayer.cu">
+      <Filter>Sources\MyCNN</Filter>
+    </CudaCompile>
+    <CudaCompile Include="MyCNN\ConvNet.cu">
+      <Filter>Sources\MyCNN</Filter>
+    </CudaCompile>
+    <CudaCompile Include="MyCNN\ConvLayer.cu">
+      <Filter>Sources\MyCNN</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Utils\FoldsFactory.cpp">
@@ -120,6 +150,12 @@
     </ClCompile>
     <ClCompile Include="Utils\CudaUtils.cpp">
       <Filter>Sources\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="MyCNN\Images.cpp">
+      <Filter>Sources\MyCNN</Filter>
+    </ClCompile>
+    <ClCompile Include="JoinedNetwork\JoinedNetwork.cpp">
+      <Filter>Sources\JoinedNetwork</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -143,9 +179,6 @@
     </None>
     <None Include="Network\NetworkCuda.cuh">
       <Filter>Headers\Network</Filter>
-    </None>
-    <None Include="GPU\CudaUtils.cuh">
-      <Filter>Headers\GPU</Filter>
     </None>
     <None Include="JoinedNetwork\JoinedNetwork.cuh">
       <Filter>Headers\JoinedNetwork</Filter>

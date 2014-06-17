@@ -164,6 +164,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   <ItemGroup>
     <CudaCompile Include="GPU\GpuBuffer.cu" />
     <CudaCompile Include="main.cu" />
+    <CudaCompile Include="MyCNN\ConvLayer.cu" />
+    <CudaCompile Include="MyCNN\ConvNet.cu" />
+    <CudaCompile Include="MyCNN\MaxPoolLayer.cu" />
     <CudaCompile Include="Network\Layer.cu" />
     <CudaCompile Include="Network\LayerCuda.cu" />
     <CudaCompile Include="Network\Network.cu" />
@@ -181,6 +184,11 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="GPU\ImageConvolution.cuh" />
     <ClInclude Include="GPU\Converter.cuh" />
     <ClInclude Include="ImageBatch.h" />
+    <ClInclude Include="MyCNN\ConvLayer.h" />
+    <ClInclude Include="MyCNN\ConvNet.h" />
+    <ClInclude Include="MyCNN\Images.h" />
+    <ClInclude Include="MyCNN\MaxPoolLayer.h" />
+    <ClInclude Include="MyCNN\VirtualLayer.h" />
     <ClInclude Include="Types.h" />
     <ClInclude Include="Utils\CudaUtils.h" />
     <ClInclude Include="Utils\CvUtils.h" />
@@ -188,13 +196,14 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Utils\Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="JoinedNetwork\JoinedNetwork.cpp" />
+    <ClCompile Include="MyCNN\Images.cpp" />
     <ClCompile Include="Utils\CudaUtils.cpp" />
     <ClCompile Include="Utils\CvUtils.cpp" />
     <ClCompile Include="Utils\FoldsFactory.cpp" />
     <ClCompile Include="Utils\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="GPU\CudaUtils.cuh" />
     <None Include="GPU\MaxPooling.cuh" />
     <None Include="GPU\Packer.cuh" />
     <None Include="GPU\VarianceCenterizer.cuh" />

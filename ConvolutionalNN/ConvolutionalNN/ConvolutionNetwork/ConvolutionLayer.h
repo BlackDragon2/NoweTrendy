@@ -1,7 +1,7 @@
 
 #ifndef CNN_CONVOLUTION_NETWORK_CONVOLUTION_LAYER_H_
 #define CNN_CONVOLUTION_NETWORK_CONVOLUTION_LAYER_H_
-
+/*
 #include "../ImageBatch.h"
 #include "../GPU/GpuBuffer.cuh"
 #include "../GPU/Convolution.h"
@@ -188,6 +188,6 @@ gpu::GpuBuffer::PtrS const& ConvolutionLayer<T>::getOutputBuffer() const {
 	
 	}
 }
-
+*/
 
 #endif	/* CNN_CONVOLUTION_NETWORK_CONVOLUTION_LAYER_H_ */

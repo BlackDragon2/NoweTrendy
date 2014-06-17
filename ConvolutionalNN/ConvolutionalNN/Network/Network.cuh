@@ -60,7 +60,7 @@ template<typename T>
 cnn::gpu::GpuBuffer* cnn::nn::Network::calculateExample(T* input)
 {
 	layers[0]->calculateOutput(input);
-	for(int i=1;i<layers.size();i++)
+	for(uint32 i=1;i<layers.size();i++)
 	{
 		cnn::gpu::GpuBuffer* buffer=layers[i-1]->getOutputBuffer();
 		layers[i]->calculateOutput(buffer->getDataPtr<float>());
@@ -78,7 +78,7 @@ float cnn::nn::Network::train(T* input, uint32 exampleClass)
 		layers[i]->calculateError(layers[i+1]->getWeightedErrorRates());
 	}
 	layers[0]->setWeightsUpdates(input, learningRate);
-	for(int i=1;i<layers.size();i++)
+	for(uint32 i=1;i<layers.size();i++)
 	{
 		layers[i]->setWeightsUpdates(layers[i-1]->getOutputBuffer()->getDataPtr<float>(), learningRate);
 	}

@@ -1,7 +1,7 @@
 
 #ifndef CNN_CONVOLUTION_NETWORK_CONVOLUTION_NETWORK_H_
 #define CNN_CONVOLUTION_NETWORK_CONVOLUTION_NETWORK_H_
-
+/*
 #include "ConvolutionLayer.h"
 #include "../GPU/Packer.cuh"
 
@@ -39,8 +39,7 @@ public:
 	ConvolutionLayer<Input>::PtrS const& getFirstLayer()			const;
 	ConvolutionLayer<Input>::PtrS const& getLastLayer()				const;
 
-
-private:
+public:
 	std::vector<ConvolutionLayer<Input>::PtrS>	mLayers;
 	gpu::Converter<Input, Output>::PtrS			mConverter;
 	gpu::GpuBuffer::PtrS						mOutputBuffer;
@@ -226,5 +225,5 @@ ConvolutionLayer<Input>::PtrS const& ConvolutionNetwork<Input, Output>::getLastL
 	}
 }
 
-
+*/
 #endif	/* CNN_CONVOLUTION_NETWORK_CONVOLUTION_NETWORK_H_ */
